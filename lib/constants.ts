@@ -48,10 +48,6 @@ export const CARDS: CardData[] = [
 
 export const CSS = `
   @keyframes tk  { from { transform: translateX(0) }       to { transform: translateX(-50%) } }
-  @keyframes fu  { from { opacity: 0; transform: translateY(36px) } to { opacity: 1; transform: translateY(0) } }
-  @keyframes bb  { 0%,100% { transform: translateX(-50%) translateY(0) } 50% { transform: translateX(-50%) translateY(8px) } }
-  @keyframes pl  { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
-  @keyframes ci  { 0%,100% { clip-path: inset(0 0 0 0) } 25% { clip-path: inset(10% -4px 85% 0) } 50% { clip-path: inset(40% -4px 50% 0) } 75% { clip-path: inset(70% -4px 20% 0) } }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   a { text-decoration: none; }
   ::-webkit-scrollbar { width: 3px; }

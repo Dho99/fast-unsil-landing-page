@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const montserrat = Montserrat({
     subsets: ["latin"],
@@ -39,7 +39,7 @@ export default function RootLayout({
                 geistSans.variable,
                 geistMono.variable,
                 montserrat.variable,
-                inter.variable,
+                geist.variable,
                 "font-sans",
             )}
             suppressHydrationWarning

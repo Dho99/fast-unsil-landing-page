@@ -1,8 +1,14 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { WORDS } from "@/lib/constants";
 import CyberBg from "./CyberBg";
 import CycleWord from "./CycleWord";
+
+const btnHover = {
+    whileHover: { y: -2 },
+    transition: { duration: 0.25 } as const,
+};
 
 export default function Hero() {
     return (
@@ -40,13 +46,15 @@ export default function Hero() {
                 }}
             />
 
-            <div
+            <motion.div
+                initial={{ opacity: 0, y: 36 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, ease: "easeOut" }}
                 style={{
                     position: "relative",
                     zIndex: 2,
                     textAlign: "center",
                     padding: "0 clamp(20px,5vw,48px)",
-                    animation: "fu 0.9s ease both",
                     maxWidth: 800,
                 }}
             >
@@ -62,13 +70,14 @@ export default function Hero() {
                         marginBottom: 26,
                     }}
                 >
-                    <div
+                    <motion.div
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         style={{
                             width: 7,
                             height: 7,
                             borderRadius: "50%",
                             background: "#00D4AA",
-                            animation: "pl 2s ease-in-out infinite",
                         }}
                     />
                     <span
@@ -85,7 +94,7 @@ export default function Hero() {
 
                 <h1
                     style={{
-                        fontSize: "clamp(2rem,5.5vw,4.8rem)",
+                        fontSize: "clamp(1.8rem,5.5vw,4.8rem)",
                         fontWeight: 800,
                         lineHeight: 1.13,
                         letterSpacing: "-0.025em",
@@ -96,7 +105,7 @@ export default function Hero() {
                 </h1>
                 <h1
                     style={{
-                        fontSize: "clamp(2rem,5.5vw,4.8rem)",
+                        fontSize: "clamp(1.8rem,5.5vw,4.8rem)",
                         fontWeight: 800,
                         lineHeight: 1.13,
                         letterSpacing: "-0.025em",
@@ -110,7 +119,7 @@ export default function Hero() {
                 <p
                     style={{
                         color: "#6B7A95",
-                        fontSize: "clamp(0.88rem,1.6vw,1rem)",
+                        fontSize: "clamp(0.85rem,1.6vw,1rem)",
                         maxWidth: 490,
                         margin: "0 auto 34px",
                         lineHeight: 1.8,
@@ -129,7 +138,12 @@ export default function Hero() {
                         flexWrap: "wrap",
                     }}
                 >
-                    <button
+                    <motion.button
+                        {...btnHover}
+                        whileHover={{
+                            ...btnHover.whileHover,
+                            boxShadow: "0 8px 28px rgba(0,212,170,0.3)",
+                        }}
                         style={{
                             background: "#00D4AA",
                             color: "#070B18",
@@ -140,22 +154,18 @@ export default function Hero() {
                             fontWeight: 700,
                             cursor: "pointer",
                             letterSpacing: "0.07em",
-                            transition: "box-shadow 0.25s, transform 0.25s",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.boxShadow =
-                                "0 8px 28px rgba(0,212,170,0.3)";
-                            e.currentTarget.style.transform =
-                                "translateY(-2px)";
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.boxShadow = "";
-                            e.currentTarget.style.transform = "";
+                            minHeight: 44,
                         }}
                     >
                         Eksplor FAST →
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                        {...btnHover}
+                        whileHover={{
+                            ...btnHover.whileHover,
+                            borderColor: "rgba(192,203,217,0.5)",
+                            color: "#fff",
+                        }}
                         style={{
                             background: "transparent",
                             color: "#C0CBD9",
@@ -165,32 +175,23 @@ export default function Hero() {
                             fontSize: 13,
                             fontWeight: 500,
                             cursor: "pointer",
-                            transition: "border-color 0.2s, color 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor =
-                                "rgba(192,203,217,0.5)";
-                            e.currentTarget.style.color = "#fff";
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor =
-                                "rgba(192,203,217,0.2)";
-                            e.currentTarget.style.color = "#C0CBD9";
+                            minHeight: 44,
                         }}
                     >
                         Lihat Riset
-                    </button>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
 
-            <div
+            <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 style={{
                     position: "absolute",
                     bottom: 26,
                     left: "50%",
                     textAlign: "center",
                     zIndex: 2,
-                    animation: "bb 2s ease-in-out infinite",
                 }}
             >
                 <div
@@ -205,7 +206,7 @@ export default function Hero() {
                     SCROLL
                 </div>
                 <div style={{ color: "#00D4AA", fontSize: 15 }}>↓</div>
-            </div>
+            </motion.div>
         </section>
     );
 }

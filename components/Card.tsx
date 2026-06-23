@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import type { CardData } from "@/lib/constants";
 
 export default function Card({ d }: { d: CardData }) {
     const [h, setH] = useState(false);
     return (
-        <div
+        <motion.div
             onMouseEnter={() => setH(true)}
             onMouseLeave={() => setH(false)}
+            whileHover={{ y: -6 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             style={{
                 background: h
                     ? `rgba(${d.rgb},0.07)`
@@ -16,8 +19,6 @@ export default function Card({ d }: { d: CardData }) {
                 border: `1px solid rgba(${d.rgb},${h ? 0.5 : 0.2})`,
                 borderRadius: 16,
                 padding: "32px 24px",
-                transition: "all 0.3s ease",
-                transform: h ? "translateY(-6px)" : "translateY(0)",
                 position: "relative",
                 overflow: "hidden",
             }}
@@ -46,14 +47,14 @@ export default function Card({ d }: { d: CardData }) {
             >
                 [{d.n}]
             </div>
-            <div
+            <motion.div
+                animate={{ width: h ? 52 : 32 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 style={{
-                    width: h ? 52 : 32,
                     height: 3,
                     background: d.c,
                     borderRadius: 2,
                     marginBottom: 18,
-                    transition: "width 0.3s ease",
                 }}
             />
             <h3
@@ -75,6 +76,6 @@ export default function Card({ d }: { d: CardData }) {
             >
                 {d.desc}
             </p>
-        </div>
+        </motion.div>
     );
 }

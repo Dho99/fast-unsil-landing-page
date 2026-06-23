@@ -11,8 +11,15 @@ export default function CyberBg() {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        let animId: number;
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        resize();
+        window.addEventListener("resize", resize);
 
         const FS = 14;
         const CHARS = "アカサタFAST01101#/>\\";
@@ -29,7 +36,6 @@ export default function CyberBg() {
         }));
 
         let frame = 0;
-        let id: number;
 
         const draw = () => {
             frame++;
@@ -85,11 +91,14 @@ export default function CyberBg() {
                 }
             }
 
-            id = requestAnimationFrame(draw);
+            animId = requestAnimationFrame(draw);
         };
 
         draw();
-        return () => cancelAnimationFrame(id);
+        return () => {
+            cancelAnimationFrame(animId);
+            window.removeEventListener("resize", resize);
+        };
     }, []);
 
     return (
