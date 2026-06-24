@@ -2,204 +2,144 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { NAV } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function Navbar({ scrolled }: { scrolled: boolean }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { theme, setTheme } = useTheme();
 
     return (
         <nav
-            style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 100,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0 clamp(16px,4vw,56px)",
-                height: 64,
-                background: scrolled ? "rgba(7,11,24,0.92)" : "transparent",
-                backdropFilter: scrolled ? "blur(14px)" : "none",
-                borderBottom: scrolled
-                    ? "1px solid rgba(0,212,170,0.11)"
-                    : "none",
-                transition: "all 0.35s ease",
-            }}
+            className={cn(
+                "sticky top-0 z-[100] flex items-center justify-center h-16 transition-all duration-[350ms] px-[clamp(16px,4vw,56px)]",
+                scrolled
+                    ? "bg-white/70 dark:bg-black/70 backdrop-blur-lg border-b border-[rgba(59,130,246,0.15)]"
+                    : "bg-transparent border-b-0",
+            )}
         >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div
-                    style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: "50%",
-                        background: "rgba(0,212,170,0.1)",
-                        border: "1.5px solid #00D4AA",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 800,
-                        fontSize: 13,
-                        color: "#00D4AA",
-                    }}
-                >
-                    F
-                </div>
-                <span
-                    style={{
-                        fontWeight: 700,
-                        fontSize: 13,
-                        letterSpacing: "0.18em",
-                    }}
-                >
-                    FAST
-                </span>
-            </div>
+            <div className="container flex items-center justify-between h-full">
+                {/* Logo — swap this div with <img src="/logo.png" className="h-9 w-auto" /> after bg removal */}
+                {/* <div className="h-9 w-[120px] border border-dashed border-[#3B82F6]/35 dark:border-[#3B82F6]/25 rounded flex items-center justify-center gap-1.5 bg-[#3B82F6]/04 dark:bg-[#3B82F6]/05">
+                    <div className="w-4 h-4 bg-[#DC2626]/15 border border-[#DC2626]/35 rounded-sm flex items-center justify-center text-[7px] text-[#DC2626]/60 select-none">⚡</div>
+                    <span className="font-bold text-[11px] tracking-[0.22em] font-heading text-[#3B82F6]/55 dark:text-[#3B82F6]/45 select-none">FAST</span>
+                </div> */}
+                <Image
+                    src="/logo.png"
+                    alt="Logo"
+                    width={120}
+                    height={36}
+                    className="h-14 w-auto"
+                />
 
-            {/* Desktop links */}
-            <div
-                className="hidden md:flex"
-                style={{ gap: "clamp(14px,2.5vw,30px)" }}
-            >
-                {NAV.map((l) => (
-                    <motion.a
-                        key={l}
-                        href="#"
-                        whileHover={{ color: "#00D4AA" }}
-                        style={{
-                            color: "#8892A4",
-                            fontSize: 13,
-                            letterSpacing: "0.07em",
-                        }}
-                    >
-                        {l}
-                    </motion.a>
-                ))}
-            </div>
-
-            {/* Desktop CTA */}
-            <div className="hidden md:block">
-                <Button
-                    style={{
-                        background: "#E85A4F",
-                        color: "#fff",
-                        border: "none",
-                        padding: "8px 20px",
-                        borderRadius: 24,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        letterSpacing: "0.07em",
-                    }}
-                    onMouseEnter={(e) =>
-                        (e.currentTarget.style.opacity = "0.82")
-                    }
-                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                >
-                    Bergabung
-                </Button>
-            </div>
-
-            {/* Mobile hamburger */}
-            <button
-                className="md:hidden flex items-center justify-center"
-                style={{
-                    background: "none",
-                    border: "none",
-                    color: "#00D4AA",
-                    cursor: "pointer",
-                    padding: 4,
-                }}
-                onClick={() => setMenuOpen(true)}
-                aria-label="Open menu"
-            >
-                <Menu size={24} />
-            </button>
-
-            {/* Mobile overlay menu */}
-            <AnimatePresence>
-                {menuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{
-                            position: "fixed",
-                            inset: 0,
-                            zIndex: 200,
-                            background: "rgba(7,11,24,0.97)",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 32,
-                        }}
-                    >
-                        <button
-                            style={{
-                                position: "absolute",
-                                top: 20,
-                                right: 20,
-                                background: "none",
-                                border: "none",
-                                color: "#00D4AA",
-                                cursor: "pointer",
-                                padding: 4,
-                            }}
-                            onClick={() => setMenuOpen(false)}
-                            aria-label="Close menu"
+                {/* Desktop links */}
+                <div className="hidden md:flex gap-[clamp(14px,2.5vw,30px)]">
+                    {NAV.map((l) => (
+                        <motion.a
+                            key={l}
+                            href="#"
+                            whileHover={{ color: "#3B82F6" }}
+                            className=" text-md tracking-[0.07em]"
                         >
-                            <X size={24} />
-                        </button>
-                        {NAV.map((l, idx) => (
-                            <motion.a
-                                key={l}
-                                href="#"
+                            {l}
+                        </motion.a>
+                    ))}
+                </div>
+
+                {/* Desktop right section */}
+                <div className="hidden md:flex items-center gap-x-5">
+                    {/* Theme toggle */}
+                    <button
+                        onClick={() =>
+                            setTheme(theme === "dark" ? "light" : "dark")
+                        }
+                        className="bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1.5 flex items-center justify-center rounded-md transition-colors duration-200 hover:bg-[rgba(0,212,170,0.1)]"
+                        aria-label="Toggle theme"
+                    >
+                        {theme === "dark" ? (
+                            <Sun size={18} />
+                        ) : (
+                            <Moon size={18} />
+                        )}
+                    </button>
+
+                    <Button className="bg-[#DC2626] text-white border-0 h-10 px-7 rounded-[24px] text-sm font-semibold cursor-pointer tracking-[0.07em] hover:opacity-80 hover:bg-[#DC2626] transition-opacity w-24">
+                        Bergabung
+                    </Button>
+                </div>
+
+                {/* Mobile hamburger + theme toggle */}
+                <div className="md:hidden flex items-center gap-2">
+                    <button
+                        onClick={() =>
+                            setTheme(theme === "dark" ? "light" : "dark")
+                        }
+                        className="bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1 flex items-center justify-center"
+                        aria-label="Toggle theme"
+                    >
+                        {theme === "dark" ? (
+                            <Sun size={20} />
+                        ) : (
+                            <Moon size={20} />
+                        )}
+                    </button>
+                    <button
+                        className="bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1 flex items-center justify-center"
+                        onClick={() => setMenuOpen(true)}
+                        aria-label="Open menu"
+                    >
+                        <Menu size={24} />
+                    </button>
+                </div>
+
+                {/* Mobile overlay menu */}
+                <AnimatePresence>
+                    {menuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-8 bg-[color-mix(in_srgb,var(--bg)_97%,transparent)]"
+                        >
+                            <button
+                                className="absolute top-5 right-5 bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1"
+                                onClick={() => setMenuOpen(false)}
+                                aria-label="Close menu"
+                            >
+                                <X size={24} />
+                            </button>
+                            {NAV.map((l, idx) => (
+                                <motion.a
+                                    key={l}
+                                    href="#"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.08 }}
+                                    whileHover={{ color: "#3B82F6" }}
+                                    className="text-subtle-text text-lg tracking-[0.12em]"
+                                    onClick={() => setMenuOpen(false)}
+                                >
+                                    {l}
+                                </motion.a>
+                            ))}
+                            <motion.button
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.08 }}
-                                whileHover={{ color: "#00D4AA" }}
-                                style={{
-                                    color: "#8892A4",
-                                    fontSize: 18,
-                                    letterSpacing: "0.12em",
-                                }}
+                                transition={{ delay: 0.32 }}
+                                className="bg-[#DC2626] text-white border-0 px-8 py-3 rounded-[24px] text-sm font-semibold cursor-pointer tracking-[0.07em] mt-2 hover:opacity-80 transition-opacity"
                                 onClick={() => setMenuOpen(false)}
                             >
-                                {l}
-                            </motion.a>
-                        ))}
-                        <motion.button
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.32 }}
-                            style={{
-                                background: "#E85A4F",
-                                color: "#fff",
-                                border: "none",
-                                padding: "12px 32px",
-                                borderRadius: 24,
-                                fontSize: 14,
-                                fontWeight: 600,
-                                cursor: "pointer",
-                                letterSpacing: "0.07em",
-                                marginTop: 8,
-                            }}
-                            onMouseEnter={(e) =>
-                                (e.currentTarget.style.opacity = "0.82")
-                            }
-                            onMouseLeave={(e) =>
-                                (e.currentTarget.style.opacity = "1")
-                            }
-                            onClick={() => setMenuOpen(false)}
-                        >
-                            Bergabung
-                        </motion.button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                Bergabung
+                            </motion.button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </nav>
     );
 }

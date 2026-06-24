@@ -23,14 +23,7 @@ export default function LandingPage() {
     return (
         <div
             ref={wrapRef}
-            style={{
-                background: "#070B18",
-                color: "#fff",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                height: "100vh",
-                overflowY: "auto",
-                overflowX: "hidden",
-            }}
+            className="bg-surface text-content h-screen overflow-y-auto overflow-x-hidden font-sans"
         >
             <style>{CSS}</style>
             <Navbar scrolled={scrolled} />

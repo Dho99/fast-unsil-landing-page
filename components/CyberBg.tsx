@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 
 export default function CyberBg() {
     const ref = useRef<HTMLCanvasElement>(null);
+    const { resolvedTheme } = useTheme();
 
     useEffect(() => {
         const canvas = ref.current;
@@ -12,6 +14,11 @@ export default function CyberBg() {
         if (!ctx) return;
 
         let animId: number;
+
+        const isDark = resolvedTheme === "dark";
+        const trailFill = isDark
+            ? "rgba(6,13,27,0.07)"
+            : "rgba(238,242,248,0.08)";
 
         const resize = () => {
             canvas.width = window.innerWidth;
@@ -40,7 +47,7 @@ export default function CyberBg() {
         const draw = () => {
             frame++;
 
-            ctx.fillStyle = "rgba(7,11,24,0.07)";
+            ctx.fillStyle = trailFill;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (frame % 2 === 0) {
@@ -48,8 +55,8 @@ export default function CyberBg() {
                 drops.forEach((y, i) => {
                     const bright = Math.random() > 0.96;
                     ctx.fillStyle = bright
-                        ? "rgba(0,212,170,0.88)"
-                        : "rgba(0,212,170,0.09)";
+                        ? "rgba(59,130,246,0.88)"
+                        : "rgba(59,130,246,0.09)";
                     ctx.fillText(
                         CHARS[Math.floor(Math.random() * CHARS.length)],
                         i * FS,
@@ -70,7 +77,7 @@ export default function CyberBg() {
                 const pr = n.r + Math.sin(n.ph) * 0.4;
                 ctx.beginPath();
                 ctx.arc(n.x, n.y, pr, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(0,212,170,0.72)";
+                ctx.fillStyle = "rgba(59,130,246,0.72)";
                 ctx.fill();
             });
 
@@ -82,7 +89,7 @@ export default function CyberBg() {
                         nodes[i].y - nodes[j].y,
                     );
                     if (d < 130) {
-                        ctx.strokeStyle = `rgba(0,212,170,${(1 - d / 130) * 0.2})`;
+                        ctx.strokeStyle = `rgba(59,130,246,${(1 - d / 130) * 0.2})`;
                         ctx.beginPath();
                         ctx.moveTo(nodes[i].x, nodes[i].y);
                         ctx.lineTo(nodes[j].x, nodes[j].y);
@@ -99,18 +106,12 @@ export default function CyberBg() {
             cancelAnimationFrame(animId);
             window.removeEventListener("resize", resize);
         };
-    }, []);
+    }, [resolvedTheme]);
 
     return (
         <canvas
             ref={ref}
-            style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                opacity: 0.72,
-            }}
+            className="absolute inset-0 w-full h-full [opacity:var(--cyber-opacity)]"
         />
     );
 }

@@ -21,11 +21,7 @@ export default function CycleWord({ words }: { words: string[] }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.32 }}
-                style={{
-                    color: "#00D4AA",
-                    fontStyle: "italic",
-                    display: "inline-block",
-                }}
+                className="text-[#3B82F6] italic inline-block"
             >
                 {words[i]}
             </motion.span>

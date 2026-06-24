@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
 import { WORDS } from "@/lib/constants";
 import CyberBg from "./CyberBg";
 import CycleWord from "./CycleWord";
@@ -11,151 +12,74 @@ const btnHover = {
 };
 
 export default function Hero() {
+    const { theme } = useTheme();
+    const videoSrc = theme === "dark" ? "/darkmode.mp4" : "/lightmode.mp4";
+
     return (
-        <section
-            style={{
-                position: "relative",
-                height: "calc(100vh - 64px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-            }}
-        >
+        <section className="relative flex items-center justify-center overflow-hidden h-[calc(100vh-64px)]">
             <CyberBg />
 
-            <div
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                        "radial-gradient(ellipse at center, transparent 35%, rgba(7,11,24,0.65) 100%)",
-                    zIndex: 1,
-                    pointerEvents: "none",
-                }}
-            />
+            {/* Video background */}
+            <video
+                key={videoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
+            >
+                <source src={videoSrc} type="video/mp4" />
+            </video>
 
-            <div
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                        "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px)",
-                    zIndex: 1,
-                    pointerEvents: "none",
-                }}
-            />
+            <div className="absolute inset-0 z-[1] pointer-events-none bg-black/20" />
+            <div className="absolute inset-0 z-10 pointer-events-none bg-vignette" />
+            <div className="absolute inset-0 z-10 pointer-events-none bg-scanline" />
 
             <motion.div
                 initial={{ opacity: 0, y: 36 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.9, ease: "easeOut" }}
-                style={{
-                    position: "relative",
-                    zIndex: 2,
-                    textAlign: "center",
-                    padding: "0 clamp(20px,5vw,48px)",
-                    maxWidth: 800,
-                }}
+                className="relative z-20 text-center max-w-[800px] px-[clamp(20px,5vw,48px)]"
             >
-                <div
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        background: "rgba(0,212,170,0.07)",
-                        border: "1px solid rgba(0,212,170,0.22)",
-                        borderRadius: 24,
-                        padding: "5px 14px",
-                        marginBottom: 26,
-                    }}
-                >
+                <div className="inline-flex items-center gap-2 bg-pill-bg border border-pill-border rounded-[24px] px-[14px] py-[5px] mb-[26px] h-full">
                     <motion.div
                         animate={{ opacity: [1, 0.3, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: "50%",
-                            background: "#00D4AA",
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
                         }}
+                        className="w-[7px] h-[7px] rounded-full bg-[#3B82F6]"
                     />
-                    <span
-                        style={{
-                            fontSize: 10,
-                            letterSpacing: "0.22em",
-                            color: "#00D4AA",
-                            fontFamily: "monospace",
-                        }}
-                    >
+                    <span className="text-[12px] tracking-[0.22em] text-[#3B82F6] font-mono">
                         UNIVERSITAS SILIWANGI · ACTIVE
                     </span>
                 </div>
 
-                <h1
-                    style={{
-                        fontSize: "clamp(1.8rem,5.5vw,4.8rem)",
-                        fontWeight: 800,
-                        lineHeight: 1.13,
-                        letterSpacing: "-0.025em",
-                        marginBottom: 8,
-                    }}
-                >
+                <h1 className="font-extrabold leading-[1.13] tracking-[-0.025em] mb-2 font-heading text-[clamp(2.8rem,6vw,5.5rem)] [text-shadow:0_1px_6px_rgba(0,0,0,0.1)] dark:[text-shadow:0_2px_12px_rgba(0,0,0,0.55)]">
                     Kami Siap <CycleWord words={WORDS} />
                 </h1>
-                <h1
-                    style={{
-                        fontSize: "clamp(1.8rem,5.5vw,4.8rem)",
-                        fontWeight: 800,
-                        lineHeight: 1.13,
-                        letterSpacing: "-0.025em",
-                        marginBottom: 22,
-                        color: "#C0CBD9",
-                    }}
-                >
+                <h1 className="font-extrabold leading-[1.13] tracking-[-0.025em] mb-[30px] text-content dark:text-hero-sub font-heading text-[clamp(2.8rem,6vw,5.5rem)] [text-shadow:0_1px_6px_rgba(0,0,0,0.1)] dark:[text-shadow:0_2px_12px_rgba(0,0,0,0.55)]">
                     Ancaman Siber
                 </h1>
 
-                <p
-                    style={{
-                        color: "#6B7A95",
-                        fontSize: "clamp(0.85rem,1.6vw,1rem)",
-                        maxWidth: 490,
-                        margin: "0 auto 34px",
-                        lineHeight: 1.8,
-                    }}
-                >
+                <p className="mx-auto mt-6 mb-8 leading-[2] text-[clamp(1rem,1.8vw,1.15rem)] [text-shadow:0_1px_4px_rgba(0,0,0,0.08)] dark:[text-shadow:0_1px_8px_rgba(0,0,0,0.4)] dark:text-hero-sub font-semibold">
                     Komunitas riset keamanan digital yang bergerak di bidang
                     forensik, penetration testing, dan penelitian siber di
                     Universitas Siliwangi.
                 </p>
 
                 <div
-                    style={{
-                        display: "flex",
-                        gap: 12,
-                        justifyContent: "center",
-                        flexWrap: "wrap",
-                    }}
+                    className="flex gap-3 mt-24 justify-center flex-wrap"
+                    style={{ marginTop: "30px" }}
                 >
                     <motion.button
                         {...btnHover}
                         whileHover={{
                             ...btnHover.whileHover,
-                            boxShadow: "0 8px 28px rgba(0,212,170,0.3)",
+                            boxShadow: "0 8px 28px rgba(59,130,246,0.35)",
                         }}
-                        style={{
-                            background: "#00D4AA",
-                            color: "#070B18",
-                            border: "none",
-                            padding: "12px 26px",
-                            borderRadius: 8,
-                            fontSize: 13,
-                            fontWeight: 700,
-                            cursor: "pointer",
-                            letterSpacing: "0.07em",
-                            minHeight: 44,
-                        }}
+                        className="bg-[#3B82F6] text-white border-0 h-12 px-9 rounded-md text-sm font-bold cursor-pointer tracking-[0.07em] w-48"
                     >
                         Eksplor FAST →
                     </motion.button>
@@ -166,17 +90,7 @@ export default function Hero() {
                             borderColor: "rgba(192,203,217,0.5)",
                             color: "#fff",
                         }}
-                        style={{
-                            background: "transparent",
-                            color: "#C0CBD9",
-                            border: "1px solid rgba(192,203,217,0.2)",
-                            padding: "12px 26px",
-                            borderRadius: 8,
-                            fontSize: 13,
-                            fontWeight: 500,
-                            cursor: "pointer",
-                            minHeight: 44,
-                        }}
+                        className="bg-transparent text-[#374151] dark:text-hero-sub h-12 px-9 rounded-md text-sm font-medium cursor-pointer border border-[#374151]/25 dark:border-[color-mix(in_srgb,var(--hero-sub)_20%,transparent)] w-32 border border-[#374151]/25 dark:border-[color-mix(in_srgb,var(--hero-sub)_20%,transparent)] w-32 hover:border-white"
                     >
                         Lihat Riset
                     </motion.button>
@@ -185,27 +99,17 @@ export default function Hero() {
 
             <motion.div
                 animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                style={{
-                    position: "absolute",
-                    bottom: 26,
-                    left: "50%",
-                    textAlign: "center",
-                    zIndex: 2,
+                transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
                 }}
+                className="absolute bottom-[26px] left-1/2 text-center z-20"
             >
-                <div
-                    style={{
-                        fontSize: 9,
-                        letterSpacing: "0.28em",
-                        color: "#3A4455",
-                        fontFamily: "monospace",
-                        marginBottom: 6,
-                    }}
-                >
+                <div className="text-[11px] tracking-[0.28em] text-scroll-text font-mono mb-1.5">
                     SCROLL
                 </div>
-                <div style={{ color: "#00D4AA", fontSize: 15 }}>↓</div>
+                <div className="text-[#3B82F6] text-[15px]">↓</div>
             </motion.div>
         </section>
     );

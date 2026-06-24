@@ -5,62 +5,25 @@ import Card from "./Card";
 
 export default function FocusAreas() {
     return (
-        <section
-            style={{
-                padding: "clamp(56px,9vw,110px) clamp(20px,5vw,60px)",
-            }}
-        >
-            <div style={{ maxWidth: 1060, margin: "0 auto" }}>
-                <div
-                    style={{
-                        textAlign: "center",
-                        marginBottom: "clamp(36px,6vw,66px)",
-                    }}
-                >
-                    <div
-                        style={{
-                            fontSize: 10,
-                            color: "#00D4AA",
-                            letterSpacing: "0.32em",
-                            fontFamily: "monospace",
-                            marginBottom: 13,
-                        }}
-                    >
+        <section className=" flex justify-center items-center h-[calc(60vh-64px)]">
+            <div className="w-full mx-auto max-w-7xl">
+                <div className="text-center mb-[clamp(36px,6vw,66px)] flex flex-col items-center">
+                    <div className="text-[13px] text-[#3B82F6] tracking-[0.32em] font-mono mb-[13px] font-semibold">
                         ▸ FOKUS RISET
                     </div>
-                    <h2
-                        style={{
-                            fontSize: "clamp(1.6rem,3.6vw,2.6rem)",
-                            fontWeight: 800,
-                            letterSpacing: "-0.02em",
-                            marginBottom: 14,
-                        }}
-                    >
+                    <h2 className="text-[clamp(2rem,4vw,3rem)] font-extrabold tracking-[-0.02em] mb-[14px] text-content font-heading">
                         Apa yang FAST Kerjakan?
                     </h2>
                     <p
-                        style={{
-                            color: "#6B7A95",
-                            maxWidth: 440,
-                            margin: "0 auto",
-                            lineHeight: 1.75,
-                            fontSize: "0.9rem",
-                        }}
+                        className="text-muted-text max-w-[440px] mx-auto leading-[1.75] text-[1.1rem]"
+                        style={{ marginBottom: "2rem" }}
                     >
                         Dari investigasi artefak digital hingga pengujian
-                        keamanan aktif — kami bergerak di garis terdepan
-                        siber.
+                        keamanan aktif — kami bergerak di garis terdepan siber.
                     </p>
                 </div>
 
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                            "repeat(auto-fit, minmax(250px, 1fr))",
-                        gap: 16,
-                    }}
-                >
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">
                     {CARDS.map((d) => (
                         <Card key={d.n} d={d} />
                     ))}

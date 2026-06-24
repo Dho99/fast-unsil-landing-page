@@ -15,7 +15,7 @@ export default function Card({ d }: { d: CardData }) {
             style={{
                 background: h
                     ? `rgba(${d.rgb},0.07)`
-                    : "rgba(255,255,255,0.02)",
+                    : "var(--card-custom-bg)",
                 border: `1px solid rgba(${d.rgb},${h ? 0.5 : 0.2})`,
                 borderRadius: 16,
                 padding: "32px 24px",
@@ -37,13 +37,8 @@ export default function Card({ d }: { d: CardData }) {
                 }}
             />
             <div
-                style={{
-                    fontFamily: "monospace",
-                    fontSize: 10,
-                    color: `rgba(${d.rgb},0.55)`,
-                    letterSpacing: "0.22em",
-                    marginBottom: 16,
-                }}
+                className="font-mono text-[11px] tracking-[0.22em] mb-4"
+                style={{ color: `rgba(${d.rgb},0.55)` }}
             >
                 [{d.n}]
             </div>
@@ -57,23 +52,10 @@ export default function Card({ d }: { d: CardData }) {
                     marginBottom: 18,
                 }}
             />
-            <h3
-                style={{
-                    fontSize: "1.1rem",
-                    fontWeight: 700,
-                    color: "#fff",
-                    marginBottom: 10,
-                }}
-            >
+            <h3 className="text-[1.3rem] font-bold text-content mb-[10px]">
                 {d.title}
             </h3>
-            <p
-                style={{
-                    color: "#6B7A95",
-                    lineHeight: 1.72,
-                    fontSize: "0.87rem",
-                }}
-            >
+            <p className="text-muted-text leading-[1.72] text-[1rem]">
                 {d.desc}
             </p>
         </motion.div>
