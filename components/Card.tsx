@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import type { CardData } from "@/lib/constants";
 
 export default function Card({ d }: { d: CardData }) {
     const [h, setH] = useState(false);
     return (
-        <motion.div
+        <div
             onMouseEnter={() => setH(true)}
             onMouseLeave={() => setH(false)}
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="group transition-transform duration-300 ease-out hover:-translate-y-1.5"
             style={{
                 background: h
                     ? `rgba(${d.rgb},0.07)`
@@ -21,6 +19,9 @@ export default function Card({ d }: { d: CardData }) {
                 padding: "32px 24px",
                 position: "relative",
                 overflow: "hidden",
+                transitionProperty: "transform, background, border",
+                transitionDuration: "0.3s",
+                transitionTimingFunction: "ease-out",
             }}
         >
             <div
@@ -42,15 +43,9 @@ export default function Card({ d }: { d: CardData }) {
             >
                 [{d.n}]
             </div>
-            <motion.div
-                animate={{ width: h ? 52 : 32 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                style={{
-                    height: 3,
-                    background: d.c,
-                    borderRadius: 2,
-                    marginBottom: 18,
-                }}
+            <div
+                className="w-8 h-[3px] mb-[18px] rounded-sm transition-all duration-300 ease-out group-hover:w-[52px]"
+                style={{ background: d.c }}
             />
             <h3 className="text-[1.3rem] font-bold text-content mb-[10px]">
                 {d.title}
@@ -58,6 +53,6 @@ export default function Card({ d }: { d: CardData }) {
             <p className="text-muted-text leading-[1.72] text-[1rem]">
                 {d.desc}
             </p>
-        </motion.div>
+        </div>
     );
 }

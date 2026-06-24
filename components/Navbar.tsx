@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { NAV } from "@/lib/constants";
+import { NAV, NAV_ANCHORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-export default function Navbar({ scrolled }: { scrolled: boolean }) {
+export default function Navbar({
+    scrolled,
+    activeSection,
+}: {
+    scrolled: boolean;
+    activeSection: string;
+}) {
     const [menuOpen, setMenuOpen] = useState(false);
     const { theme, setTheme } = useTheme();
 
@@ -38,16 +43,27 @@ export default function Navbar({ scrolled }: { scrolled: boolean }) {
 
                 {/* Desktop links */}
                 <div className="hidden md:flex gap-[clamp(14px,2.5vw,30px)]">
-                    {NAV.map((l) => (
-                        <motion.a
-                            key={l}
-                            href="#"
-                            whileHover={{ color: "#3B82F6" }}
-                            className=" text-md tracking-[0.07em]"
-                        >
-                            {l}
-                        </motion.a>
-                    ))}
+                    {NAV.map((l) => {
+                        const sectionId = NAV_ANCHORS[l].replace("#", "");
+                        const isActive = activeSection === sectionId;
+                        return (
+                            <a
+                                key={l}
+                                href={NAV_ANCHORS[l]}
+                                className={cn(
+                                    "text-md tracking-[0.07em] transition-colors duration-200 relative pb-1",
+                                    isActive
+                                        ? "text-[#3B82F6]"
+                                        : "hover:text-[#3B82F6]",
+                                )}
+                            >
+                                {l}
+                                {isActive && (
+                                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3B82F6] rounded-full" />
+                                )}
+                            </a>
+                        );
+                    })}
                 </div>
 
                 {/* Desktop right section */}
@@ -97,48 +113,44 @@ export default function Navbar({ scrolled }: { scrolled: boolean }) {
                 </div>
 
                 {/* Mobile overlay menu */}
-                <AnimatePresence>
-                    {menuOpen && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-8 bg-[color-mix(in_srgb,var(--bg)_97%,transparent)]"
+                {menuOpen && (
+                    <div className="animate-in fade-in-0 duration-200 fixed inset-0 z-[200] flex flex-col items-center justify-center gap-8 bg-[color-mix(in_srgb,var(--bg)_97%,transparent)]">
+                        <button
+                            className="absolute top-5 right-5 bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1"
+                            onClick={() => setMenuOpen(false)}
+                            aria-label="Close menu"
                         >
-                            <button
-                                className="absolute top-5 right-5 bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1"
-                                onClick={() => setMenuOpen(false)}
-                                aria-label="Close menu"
-                            >
-                                <X size={24} />
-                            </button>
-                            {NAV.map((l, idx) => (
-                                <motion.a
+                            <X size={24} />
+                        </button>
+                        {NAV.map((l, idx) => {
+                            const sectionId = NAV_ANCHORS[l].replace("#", "");
+                            const isActive = activeSection === sectionId;
+                            return (
+                                <a
                                     key={l}
-                                    href="#"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.08 }}
-                                    whileHover={{ color: "#3B82F6" }}
-                                    className="text-subtle-text text-lg tracking-[0.12em]"
+                                    href={NAV_ANCHORS[l]}
+                                    style={{ animationDelay: `${idx * 80}ms` }}
+                                    className={cn(
+                                        "animate-in fade-in-0 slide-in-from-bottom-4 text-lg tracking-[0.12em] transition-colors duration-200 hover:text-[#3B82F6]",
+                                        isActive
+                                            ? "text-[#3B82F6] font-semibold"
+                                            : "text-subtle-text",
+                                    )}
                                     onClick={() => setMenuOpen(false)}
                                 >
                                     {l}
-                                </motion.a>
-                            ))}
-                            <motion.button
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.32 }}
-                                className="bg-[#DC2626] text-white border-0 px-8 py-3 rounded-[24px] text-sm font-semibold cursor-pointer tracking-[0.07em] mt-2 hover:opacity-80 transition-opacity"
-                                onClick={() => setMenuOpen(false)}
-                            >
-                                Bergabung
-                            </motion.button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                </a>
+                            );
+                        })}
+                        <button
+                            style={{ animationDelay: "320ms" }}
+                            className="animate-in fade-in-0 slide-in-from-bottom-4 bg-[#DC2626] text-white border-0 px-8 py-3 rounded-[24px] text-sm font-semibold cursor-pointer tracking-[0.07em] mt-2 hover:opacity-80 transition-opacity"
+                            onClick={() => setMenuOpen(false)}
+                        >
+                            Bergabung
+                        </button>
+                    </div>
+                )}
             </div>
         </nav>
     );

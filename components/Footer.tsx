@@ -1,10 +1,10 @@
 export default function Footer() {
     return (
         <div className="flex flex-col items-center gap-2 text-center border-t border-border-subtle py-5 px-[clamp(20px,5vw,60px)]">
-            <span className="font-mono text-[11px] text-footer-text tracking-[0.1em]">
+            <span className="font-mono text-[11px] text-footer-text tracking-[0.1em]  dark:text-white/80 font-semibold">
                 © 2025 FAST · UNIVERSITAS SILIWANGI
             </span>
-            <span className="font-mono text-[10px] text-footer-text-sub tracking-[0.18em]">
+            <span className="font-mono text-[10px] text-footer-text-sub tracking-[0.18em]  dark:text-white/80 font-semibold">
                 FORENSIC AND SECURITY RESEARCH GROUP
             </span>
         </div>
