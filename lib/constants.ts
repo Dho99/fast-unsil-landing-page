@@ -61,6 +61,8 @@ export interface NewsArticle {
     title: string;
     date: string;
     excerpt: string;
+    link?: string;
+    source?: string;
 }
 
 export const NEWS: NewsArticle[] = [
@@ -170,6 +172,7 @@ export interface Publication {
     venue: string;
     year: number;
     accentColor: string;
+    link?: string;
 }
 
 export const PUBLICATIONS: Publication[] = [

@@ -1,11 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { PUBLICATIONS } from "@/lib/constants";
 import type { Publication } from "@/lib/constants";
 
 function PubItem({ pub, index }: { pub: Publication; index: number }) {
-    return (
+    const inner = (
         <motion.li
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -40,9 +41,33 @@ function PubItem({ pub, index }: { pub: Publication; index: number }) {
             </div>
         </motion.li>
     );
+
+    return pub.link ? (
+        <a
+            href={pub.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block hover:opacity-80 transition-opacity"
+        >
+            {inner}
+        </a>
+    ) : (
+        inner
+    );
 }
 
 export default function Publications() {
+    const [pubs, setPubs] = useState<Publication[]>(PUBLICATIONS);
+
+    useEffect(() => {
+        fetch("/api/publications")
+            .then((r) => r.json())
+            .then((data: Publication[]) => {
+                if (Array.isArray(data) && data.length > 0) setPubs(data);
+            })
+            .catch(() => {});
+    }, []);
+
     return (
         <section id="riset" className="py-20 px-[clamp(16px,4vw,56px)]">
             <div className="max-w-5xl mx-auto">
@@ -60,17 +85,19 @@ export default function Publications() {
                 </div>
 
                 <ol className="flex flex-col gap-6">
-                    {PUBLICATIONS.map((pub, i) => (
+                    {pubs.map((pub, i) => (
                         <PubItem key={pub.no} pub={pub} index={i} />
                     ))}
                 </ol>
 
-                <div className="flex justify-end mt-8">
+                <div className="flex justify-end gap-4 mt-8">
                     <a
-                        href="#"
+                        href="/api/rss/publications"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#3B82F6] font-mono text-[13px] tracking-[0.1em] hover:opacity-70 transition-opacity"
                     >
-                        Lihat Semua →
+                        RSS Publikasi →
                     </a>
                 </div>
             </div>

@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { NEWS } from "@/lib/constants";
 import type { NewsArticle } from "@/lib/constants";
+import { formatIsoToDisplay } from "@/lib/scrapers/utils";
 
 function NewsCard({ article }: { article: NewsArticle }) {
+    const hasLink = !!article.link && article.link !== "#";
     return (
         <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -15,7 +18,7 @@ function NewsCard({ article }: { article: NewsArticle }) {
             style={{ background: "var(--card-custom-bg)" }}
         >
             <div
-                className="h-[180px] w-full shrink-0 "
+                className="h-[180px] w-full shrink-0"
                 style={{ background: article.imagePlaceholder }}
             />
 
@@ -35,20 +38,33 @@ function NewsCard({ article }: { article: NewsArticle }) {
                     {article.title}
                 </h3>
 
-                <p className="text-muted-text text-[0.9rem] leading-[1.7] line-clamp-3 flex-1">
-                    {article.excerpt}
-                </p>
+                {article.excerpt && (
+                    <p className="text-muted-text text-[0.9rem] leading-[1.7] line-clamp-3 flex-1">
+                        {article.excerpt}
+                    </p>
+                )}
 
                 <div className="flex items-center justify-between mt-2">
                     <span className="font-mono text-[11px] text-subtle-text tracking-[0.12em]">
-                        {article.date}
+                        {formatIsoToDisplay(article.date)}
+                        {article.source && (
+                            <span className="ml-2 opacity-60">· {article.source}</span>
+                        )}
                     </span>
-                    <a
-                        href="#"
-                        className="text-[#3B82F6] font-mono text-[12px] tracking-[0.08em] hover:opacity-70 transition-opacity"
-                    >
-                        Baca Selengkapnya →
-                    </a>
+                    {hasLink ? (
+                        <a
+                            href={article.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#3B82F6] font-mono text-[12px] tracking-[0.08em] hover:opacity-70 transition-opacity"
+                        >
+                            Baca Selengkapnya →
+                        </a>
+                    ) : (
+                        <span className="text-[#3B82F6] font-mono text-[12px] tracking-[0.08em] opacity-40">
+                            Baca Selengkapnya →
+                        </span>
+                    )}
                 </div>
             </div>
         </motion.div>
@@ -56,6 +72,17 @@ function NewsCard({ article }: { article: NewsArticle }) {
 }
 
 export default function NewsArticles() {
+    const [articles, setArticles] = useState<NewsArticle[]>(NEWS);
+
+    useEffect(() => {
+        fetch("/api/news")
+            .then((r) => r.json())
+            .then((data: NewsArticle[]) => {
+                if (Array.isArray(data) && data.length > 0) setArticles(data);
+            })
+            .catch(() => {});
+    }, []);
+
     return (
         <section id="berita" className="py-20 px-[clamp(16px,4vw,56px)]">
             <div className="max-w-7xl mx-auto">
@@ -73,17 +100,19 @@ export default function NewsArticles() {
                 </div>
 
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
-                    {NEWS.map((article) => (
-                        <NewsCard key={article.id} article={article} />
+                    {articles.map((article, i) => (
+                        <NewsCard key={article.id ?? i} article={article} />
                     ))}
                 </div>
 
                 <div className="flex justify-end mt-8">
                     <a
-                        href="#"
+                        href="/api/rss"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#3B82F6] font-mono text-[13px] tracking-[0.1em] hover:opacity-70 transition-opacity"
                     >
-                        Lihat Semua →
+                        RSS Feed →
                     </a>
                 </div>
             </div>
