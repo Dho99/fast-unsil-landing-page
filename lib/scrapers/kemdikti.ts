@@ -19,7 +19,7 @@ export async function scrapeKemdikti(): Promise<NewsArticle[]> {
     const $ = cheerio.load(html);
     const items: NewsArticle[] = [];
 
-    const READ_MORE = /selengkapnya|lihat\s*detail|baca\s*lebih|read\s*more/i;
+    const READ_MORE = /selengkapnya|lihat\s*(detail|pengumuman)|baca\s*lebih|read\s*more/i;
     let count = 0;
 
     // Articles link to /announcement/article/...

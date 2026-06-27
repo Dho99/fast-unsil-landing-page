@@ -7,6 +7,7 @@ import { NAV, NAV_ANCHORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Navbar({
     scrolled,
@@ -47,7 +48,7 @@ export default function Navbar({
                         const sectionId = NAV_ANCHORS[l].replace("#", "");
                         const isActive = activeSection === sectionId;
                         return (
-                            <a
+                            <Link
                                 key={l}
                                 href={NAV_ANCHORS[l]}
                                 className={cn(
@@ -61,7 +62,7 @@ export default function Navbar({
                                 {isActive && (
                                     <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3B82F6] rounded-full" />
                                 )}
-                            </a>
+                            </Link>
                         );
                     })}
                 </div>

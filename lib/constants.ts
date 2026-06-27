@@ -1,4 +1,4 @@
-export const NAV = ["Beranda", "Tentang", "Riset", "Anggota"];
+export const NAV = ["Beranda", "Tentang", "Riset", "Anggota", "Info Dikti"];
 
 export const WORDS = ["Investigate", "Protect", "Analyze"];
 
@@ -51,6 +51,7 @@ export const NAV_ANCHORS: Record<string, string> = {
     Tentang: "#tentang",
     Riset: "#riset",
     Anggota: "#anggota",
+    "Info Dikti": "/info-dikti",
 };
 
 export interface NewsArticle {
@@ -63,6 +64,7 @@ export interface NewsArticle {
     excerpt: string;
     link?: string;
     source?: string;
+    pdfLink?: string;
 }
 
 export const NEWS: NewsArticle[] = [
@@ -70,28 +72,34 @@ export const NEWS: NewsArticle[] = [
         id: "n1",
         category: "CTF",
         categoryColor: "#3B82F6",
-        imagePlaceholder: "linear-gradient(135deg, #1e3a5f 0%, #0d1b35 60%, #1a2840 100%)",
+        imagePlaceholder:
+            "linear-gradient(135deg, #1e3a5f 0%, #0d1b35 60%, #1a2840 100%)",
         title: "Tim FAST Raih Juara 2 CTF Nasional COMPFEST XVI",
         date: "12 Jun 2025",
-        excerpt: "Tim mahasiswa FAST berhasil menembus babak final dan meraih posisi runner-up dalam ajang CTF bergengsi tingkat nasional.",
+        excerpt:
+            "Tim mahasiswa FAST berhasil menembus babak final dan meraih posisi runner-up dalam ajang CTF bergengsi tingkat nasional.",
     },
     {
         id: "n2",
         category: "Riset",
         categoryColor: "#6366F1",
-        imagePlaceholder: "linear-gradient(135deg, #1a1040 0%, #0d1b35 60%, #1e2a4a 100%)",
+        imagePlaceholder:
+            "linear-gradient(135deg, #1a1040 0%, #0d1b35 60%, #1e2a4a 100%)",
         title: "Publikasi Baru: Deteksi Malware Berbasis Machine Learning pada Jaringan IoT",
         date: "28 Mei 2025",
-        excerpt: "Riset terbaru anggota FAST diterima di konferensi internasional ICCCS 2025 dengan tingkat deteksi mencapai 97.4%.",
+        excerpt:
+            "Riset terbaru anggota FAST diterima di konferensi internasional ICCCS 2025 dengan tingkat deteksi mencapai 97.4%.",
     },
     {
         id: "n3",
         category: "Workshop",
         categoryColor: "#DC2626",
-        imagePlaceholder: "linear-gradient(135deg, #3b0a0a 0%, #1a0505 60%, #2a1010 100%)",
+        imagePlaceholder:
+            "linear-gradient(135deg, #3b0a0a 0%, #1a0505 60%, #2a1010 100%)",
         title: "Workshop Penetration Testing Web Application Dihadiri 200+ Peserta",
         date: "10 Mei 2025",
-        excerpt: "FAST menyelenggarakan workshop hands-on selama dua hari dengan materi OWASP Top 10 dan praktik live hacking.",
+        excerpt:
+            "FAST menyelenggarakan workshop hands-on selama dua hari dengan materi OWASP Top 10 dan praktik live hacking.",
     },
 ];
 

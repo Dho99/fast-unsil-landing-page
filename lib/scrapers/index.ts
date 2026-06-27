@@ -3,11 +3,10 @@ import type { NewsArticle } from "@/lib/constants";
 import { scrapeKemdikti } from "./kemdikti";
 import { scrapeSumberdaya } from "./sumberdaya";
 import { scrapeBrin } from "./brin";
+import { scrapeHiliriset } from "./hiliriset";
+import { scrapeBima } from "./bima";
+import { scrapeArjuna } from "./arjuna";
 import { parseRssFeed } from "./feeds";
-
-// TODO: hiliriset.kemdiktisaintek.go.id/pengumuman — SPA, API endpoint unknown
-// TODO: bima.kemdiktisaintek.go.id/pengumuman — SSL certificate error
-// TODO: arjuna.kemdiktisaintek.go.id/#/pengumuman — SSL error + hash-based SPA routing
 
 const CYBERSEC_FEEDS = [
     {
@@ -57,5 +56,28 @@ async function fetchAllNewsRaw(): Promise<NewsArticle[]> {
 }
 
 export const fetchAllNews = unstable_cache(fetchAllNewsRaw, ["all-news"], {
+    revalidate: 3600,
+});
+
+async function fetchInfoDiktiRaw(): Promise<NewsArticle[]> {
+    const results = await Promise.allSettled([
+        scrapeKemdikti(),
+        scrapeSumberdaya(),
+        scrapeHiliriset(),
+        scrapeBima(),
+        scrapeArjuna(),
+        scrapeBrin(),
+    ]);
+
+    return results
+        .filter(
+            (r): r is PromiseFulfilledResult<NewsArticle[]> =>
+                r.status === "fulfilled"
+        )
+        .flatMap((r) => r.value)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export const fetchInfoDikti = unstable_cache(fetchInfoDiktiRaw, ["info-dikti"], {
     revalidate: 3600,
 });

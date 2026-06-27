@@ -23,23 +23,25 @@ export async function scrapeBrin(): Promise<NewsArticle[]> {
     const $ = cheerio.load(html);
     const items: NewsArticle[] = [];
 
-    // Structure: div.pengumuman-item > h3 (title), .pengumuman-date (unix ts), .pengumuman-files a (link)
-    $(".pengumuman-item").each((i, el) => {
+    // Table: #daftar-pengumuman tbody tr.pengumuman-box
+    // Cells: td[0]=unix-ts (hidden), td[1]=content, td[2]=created-ts (hidden)
+    $("#daftar-pengumuman tbody tr.pengumuman-box").each((i, el) => {
         if (i >= 10) return false;
         const $el = $(el);
 
-        const title = $el.find("h3").first().text().trim();
-        if (!title) return;
-
-        const rawDate = $el.find(".pengumuman-date").first().text().trim();
+        const tds = $el.find("td");
+        const rawDate = tds.eq(0).find("span").first().text().trim();
         const date = timestampToIso(rawDate);
 
-        // Use first file link as the article link; fall back to the portal itself
-        const fileLink = $el.find(".pengumuman-files a").first().attr("href") ?? "";
-        const link = fileLink || URL;
+        const $content = tds.eq(1);
+        const title = $content.find(".pengumuman-judul").first().text().trim();
+        if (!title) return;
 
-        const refNum = $el.find(".pengumuman-title-number strong").text().trim();
+        const refNum = $content.find(".pengumuman-top b").first().text().trim();
         const excerpt = refNum ? `No. ${refNum}` : "";
+
+        const pdfLink = $content.find(".pengumuman-dokumen li a").first().attr("href");
+        const link = pdfLink ?? URL;
 
         items.push({
             id: `brin-${i}`,
@@ -50,6 +52,7 @@ export async function scrapeBrin(): Promise<NewsArticle[]> {
             date,
             excerpt,
             link,
+            pdfLink,
             source: "BRIN Pendanaan Risnov",
         });
     });

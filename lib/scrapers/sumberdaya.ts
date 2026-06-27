@@ -19,41 +19,32 @@ export async function scrapeSumberdaya(): Promise<NewsArticle[]> {
     const $ = cheerio.load(html);
     const items: NewsArticle[] = [];
 
-    const READ_MORE = /selengkapnya|lihat\s*detail|baca\s*lebih|read\s*more/i;
-    let count = 0;
+    // All articles are flat siblings inside one div.col:
+    //   h3.artikel-judul  → title
+    //   p (no class)       → excerpt + "[selengkapnya]" link with href
+    //   p.artikel-foot     → date text
+    $("h3.artikel-judul").each((_, el) => {
+        if (items.length >= 10) return false;
+        const $h3 = $(el);
 
-    // Articles link to /web/artikel/view/[id]
-    $("a[href*='/web/artikel/view/']").each((_, el) => {
-        if (count >= 10) return false;
-        const $el = $(el);
+        const title = $h3.text().trim();
+        if (!title || title.length < 5) return;
 
-        // Skip "read more" buttons — title anchors have the real title as text
-        const anchorText = $el.text().trim();
-        if (READ_MORE.test(anchorText) || !anchorText || anchorText.length < 5) return;
-
-        const href = $el.attr("href") ?? "";
+        // Next sibling <p> holds the excerpt and the article link
+        const $body = $h3.next("p");
+        const href = $body.find("a[href*='/web/artikel/view/']").attr("href") ?? "";
+        if (!href) return;
         const link = href.startsWith("http") ? href : `${BASE}${href}`;
-        const title = anchorText;
-        const parent = $el.closest("[class]");
 
-        // Date: text matching date pattern
-        let dateText = "";
-        parent.find("*").each((_, node) => {
-            const t = $(node).text().trim();
-            if (/\d{1,2}\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2}/.test(t)) {
-                dateText = t;
-                return false;
-            }
-        });
+        const excerpt = $body.clone().find("a").remove().end()
+            .text().trim().slice(0, 200);
 
-        const date = parseIndonesianDate(dateText) ?? new Date().toISOString();
-
-        // Excerpt: any paragraph text in parent
-        const excerpt =
-            parent.find("p").first().text().trim().slice(0, 200) || "";
+        // p.artikel-foot comes after the body <p>
+        const footText = $body.next("p.artikel-foot").text().trim();
+        const date = parseIndonesianDate(footText) ?? new Date().toISOString();
 
         items.push({
-            id: `sumberdaya-${count}`,
+            id: `sumberdaya-${items.length}`,
             category: "Sumber Daya",
             categoryColor: CATEGORY_COLOR,
             imagePlaceholder: GRADIENT,
@@ -63,7 +54,6 @@ export async function scrapeSumberdaya(): Promise<NewsArticle[]> {
             link,
             source: "Direktorat Sumber Daya",
         });
-        count++;
     });
 
     return items;
