@@ -144,9 +144,45 @@ async function scrapeSumberdaya() {
 async function scrapeBima() {
     const API = "https://apibima.kemdiktisaintek.go.id/api/v1/pengumuman";
     const PORTAL = "https://bima.kemdiktisaintek.go.id/pengumuman";
+    const PORTAL_ORIGIN = "https://bima.kemdiktisaintek.go.id";
+
+    const BIMA_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+    const BIMA_HEADERS = {
+        "User-Agent": BIMA_UA,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": `${PORTAL_ORIGIN}/`,
+        "Origin": PORTAL_ORIGIN,
+        "Sec-Fetch-Site": "same-site",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty",
+    };
 
     try {
-        const res = await fetchWithRetry(API, { sslBypass: true });
+        // Pre-fetch portal to get session cookie
+        let cookie = "";
+        try {
+            const portalRes = await undiciFetch(PORTAL_ORIGIN, {
+                headers: {
+                    "User-Agent": BIMA_UA,
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                },
+                signal: AbortSignal.timeout(8000),
+                dispatcher: sslBypassAgent,
+            });
+            const setCookie = portalRes.headers.get("set-cookie");
+            if (setCookie) cookie = setCookie.split(";")[0] + "; ";
+        } catch { /* proceed without cookie */ }
+
+        const opts = {
+            sslBypass: true,
+            headers: {
+                ...BIMA_HEADERS,
+                ...(cookie ? { Cookie: cookie } : {}),
+            },
+        };
+        const res = await fetchWithRetry(API, opts);
         if (!res?.ok) return [];
         const body = await res.json();
         if (body.code !== 200 || !Array.isArray(body.data)) return [];

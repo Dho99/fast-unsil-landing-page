@@ -10,12 +10,30 @@ function sanitizeId(id: string | number): string {
 // API uses a certificate that Node's default trust store can't verify
 const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
 
-// API lives on a separate domain, no SSL issues
 const API_URL = "https://apibima.kemdiktisaintek.go.id/api/v1/pengumuman";
 const PORTAL_URL = "https://bima.kemdiktisaintek.go.id/pengumuman";
+const PORTAL_ORIGIN = "https://bima.kemdiktisaintek.go.id";
 const CATEGORY_COLOR = "#D97706";
 const GRADIENT =
     "linear-gradient(135deg, #451a03 0%, #2d1200 60%, #5c2d0a 100%)";
+
+const USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+];
+
+const BIMA_HEADERS = {
+    "User-Agent": USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Referer": `${PORTAL_ORIGIN}/`,
+    "Origin": PORTAL_ORIGIN,
+    "Sec-Fetch-Site": "same-site",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+};
 
 interface BimaFile {
     url: string;
@@ -31,13 +49,42 @@ interface BimaItem {
     files?: BimaFile[];
 }
 
-export async function scrapeBima(): Promise<NewsArticle[]> {
-    const res = await fetch(API_URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-        signal: AbortSignal.timeout(8000),
+let cookieJar: string | null = null;
+
+async function fetchWithBIMAHeaders(url: string): Promise<Response> {
+    if (!cookieJar) {
+        try {
+            const portalRes = await fetch(PORTAL_ORIGIN, {
+                headers: {
+                    "User-Agent": USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                },
+                signal: AbortSignal.timeout(8000),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ...(sslBypassAgent && { dispatcher: sslBypassAgent as any }),
+            });
+            const setCookie = portalRes.headers.get("set-cookie");
+            if (setCookie) cookieJar = setCookie.split(";")[0];
+        } catch {
+            // portal unreachable — proceed without cookie
+        }
+    }
+
+    return fetch(url, {
+        headers: {
+            ...BIMA_HEADERS,
+            ...(cookieJar ? { Cookie: cookieJar } : {}),
+        },
+        signal: AbortSignal.timeout(10000),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...(sslBypassAgent && { dispatcher: sslBypassAgent as any }),
     });
+}
+
+export async function scrapeBima(): Promise<NewsArticle[]> {
+    cookieJar = null;
+    const res = await fetchWithBIMAHeaders(API_URL);
     if (!res.ok) return [];
 
     let body: { code?: number; data?: BimaItem[] };

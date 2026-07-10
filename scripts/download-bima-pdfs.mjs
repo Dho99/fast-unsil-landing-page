@@ -1,166 +1,195 @@
 #!/usr/bin/env node
 /**
- * BIMA PDF Downloader (Playwright)
- * Simulates browser click on BIMA download buttons to bypass S3 presigned URL restrictions.
+ * BIMA PDF Downloader
+ * Uses the public signed-url endpoint to generate temporary GCS signed URLs.
  * Run: node scripts/download-bima-pdfs.mjs
  *   or: npm run sync-pdfs
- *
- * One-time setup:
- *   npx playwright install chromium
- *   npx playwright install-deps chromium  # Linux only
  */
 
-import { chromium } from "playwright";
-import { writeFileSync, existsSync, mkdirSync } from "fs";
+import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { Agent, fetch as undiciFetch } from "undici";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, "../public/pdfs/bima");
-const API_URL = "https://apibima.kemdiktisaintek.go.id/api/v1/pengumuman";
-const BIMA_PAGE = "https://bima.kemdiktisaintek.go.id/pengumuman";
+const API_BASE = "https://apibima.kemdiktisaintek.go.id/api/v1";
+const PORTAL_ORIGIN = "https://bima.kemdiktisaintek.go.id";
+const BUCKET_BASE = "https://storage.googleapis.com/sipp-be-files/";
 
-// BIMA API uses a certificate that Node's default trust store can't verify
+// SSL bypass for BIMA API (untrusted cert)
 const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
+
+const BIMA_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+
+let cookieJar = null;
+
+async function ensureCookie() {
+    if (cookieJar) return;
+    try {
+        const res = await undiciFetch(PORTAL_ORIGIN, {
+            headers: {
+                "User-Agent": BIMA_UA,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+            },
+            signal: AbortSignal.timeout(8000),
+            dispatcher: sslBypassAgent,
+        });
+        const setCookie = res.headers.get("set-cookie");
+        if (setCookie) cookieJar = setCookie.split(";")[0];
+    } catch {
+        // proceed without cookie
+    }
+}
+
+function makeFetchOpts(extra = {}) {
+    return {
+        headers: {
+            "User-Agent": BIMA_UA,
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Referer": `${PORTAL_ORIGIN}/`,
+            "Origin": PORTAL_ORIGIN,
+            "Content-Type": "application/json",
+            ...(cookieJar ? { Cookie: cookieJar } : {}),
+            ...extra,
+        },
+        signal: AbortSignal.timeout(15000),
+        dispatcher: sslBypassAgent,
+    };
+}
 
 function sanitizeId(id) {
     return String(id).replace(/[^a-zA-Z0-9\-_]/g, "_").slice(0, 64);
 }
 
-function extractS3Key(url) {
-    try { return new URL(url).pathname; } catch { return null; }
+function extractPath(gcsUrl) {
+    if (!gcsUrl || !gcsUrl.startsWith(BUCKET_BASE)) return null;
+    const rawPath = gcsUrl.slice(BUCKET_BASE.length);
+    return encodeURIComponent(rawPath);
 }
 
-async function buildKeyMap() {
-    const res = await undiciFetch(API_URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; FAST-UNSIL-bot/1.0)" },
-        signal: AbortSignal.timeout(12000),
+async function getSignedUrl(filePath) {
+    const res = await undiciFetch(`${API_BASE}/file/public/signed-url/bulk`, {
+        method: "POST",
+        ...makeFetchOpts(),
+        body: JSON.stringify({ paths: [filePath] }),
+    });
+
+    if (!res.ok) throw new Error(`Signed URL API: HTTP ${res.status}`);
+
+    const body = await res.json();
+    if (body.code !== 200 || !body.data?.[0]?.url) {
+        throw new Error(`Signed URL API: unexpected response`);
+    }
+
+    return {
+        url: body.data[0].url,
+        expiresAt: body.data[0].expired_at,
+    };
+}
+
+async function downloadPdf(signedUrl, dest) {
+    const res = await undiciFetch(signedUrl, {
+        headers: {
+            "User-Agent": BIMA_UA,
+            "Accept": "application/pdf,image/webp,*/*",
+            "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Referer": `${PORTAL_ORIGIN}/`,
+        },
+        signal: AbortSignal.timeout(30000),
         dispatcher: sslBypassAgent,
     });
-    if (!res.ok) throw new Error(`BIMA API returned ${res.status}`);
-    const body = await res.json();
-    if (body.code !== 200 || !Array.isArray(body.data)) throw new Error("Unexpected BIMA API response");
 
-    // Map: S3 path (without query params) → sanitized BIMA item ID
-    // S3 key is stable across presigned URL rotations, so we use it for matching
-    const map = new Map();
-    for (const item of body.data) {
-        const url = item.files?.[0]?.url;
-        if (url) map.set(extractS3Key(url), sanitizeId(item.id));
-    }
-    return map;
+    if (!res.ok) throw new Error(`Download: HTTP ${res.status}`);
+
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length < 100) throw new Error(`Download: response too small (${buf.length} bytes)`);
+
+    writeFileSync(dest, buf);
+    return buf.length;
+}
+
+async function fetchItem(itemId) {
+    const res = await undiciFetch(`${API_BASE}/pengumuman/${itemId}`, makeFetchOpts());
+    if (!res.ok) return null;
+    const body = await res.json();
+    if (body.code !== 200 || !body.data) return null;
+    return body.data;
 }
 
 async function main() {
     mkdirSync(OUT_DIR, { recursive: true });
 
-    console.log("Fetching BIMA item list from API...");
-    let keyMap;
-    try {
-        keyMap = await buildKeyMap();
-    } catch (err) {
-        console.error(`[FAIL] Could not fetch BIMA API: ${err.message}`);
+    console.log("Fetching BIMA item list...");
+    await ensureCookie();
+
+    const listRes = await undiciFetch(
+        `${API_BASE}/pengumuman?sort=tgl_created:desc&criteria=is_deleted:false,type:pengumuman&page=1:20`,
+        makeFetchOpts()
+    );
+    const listBody = await listRes.json();
+    if (listBody.code !== 200 || !Array.isArray(listBody.data)) {
+        console.error("[FAIL] Unexpected list response");
         process.exit(0);
     }
-    console.log(`Found ${keyMap.size} items with PDF files`);
 
-    if (keyMap.size === 0) {
-        console.log("Nothing to download.");
-        return;
+    // Filter items that have files
+    const itemsWithFiles = [];
+    for (const item of listBody.data) {
+        const detail = await fetchItem(item.id);
+        if (detail?.files?.length > 0) {
+            itemsWithFiles.push(detail);
+        }
     }
 
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
+    console.log(`${itemsWithFiles.length} items with files\n`);
 
     let newCount = 0, skipCount = 0, failCount = 0;
 
-    // Intercept all responses — capture any PDF by content-type or URL pattern
-    await page.route("**", async (route) => {
-        let response;
-        try {
-            response = await route.fetch();
-        } catch {
-            await route.abort();
-            return;
-        }
+    for (const item of itemsWithFiles) {
+        for (const file of item.files) {
+            const fileId = file.id;
+            const bimaId = sanitizeId(fileId);
+            const dest = path.join(OUT_DIR, bimaId + ".pdf");
 
-        const ct = response.headers()["content-type"] ?? "";
-        const reqUrl = route.request().url();
-        const isPdf = ct.includes("pdf") || ct.includes("octet-stream") || reqUrl.includes(".pdf");
-
-        if (isPdf) {
-            const s3Key = extractS3Key(reqUrl);
-            const bimaId = keyMap.get(s3Key);
-            if (bimaId) {
-                const dest = path.join(OUT_DIR, bimaId + ".pdf");
-                if (existsSync(dest)) {
-                    console.log(`[SKIP] ${bimaId}.pdf`);
-                    skipCount++;
-                } else {
-                    try {
-                        writeFileSync(dest, Buffer.from(await response.body()));
-                        console.log(`[NEW]  ${bimaId}.pdf`);
-                        newCount++;
-                    } catch (err) {
-                        console.error(`[FAIL] ${bimaId}.pdf — ${err.message}`);
-                        failCount++;
-                    }
-                }
+            if (existsSync(dest) && statSync(dest).size > 1000) {
+                console.log(`[SKIP] ${file.nama}`);
+                skipCount++;
+                continue;
             }
-        }
 
-        try {
-            await route.fulfill({ response });
-        } catch {
-            // page may have navigated away
-        }
-    });
+            const filePath = extractPath(file.url);
+            if (!filePath) {
+                console.error(`[FAIL] ${file.nama} — cannot extract path from URL`);
+                failCount++;
+                continue;
+            }
 
-    console.log(`Opening ${BIMA_PAGE}...`);
-    try {
-        await page.goto(BIMA_PAGE, { waitUntil: "networkidle", timeout: 30000 });
-    } catch (err) {
-        console.error(`[FAIL] Could not load BIMA page: ${err.message}`);
-        await browser.close();
-        process.exit(0);
-    }
+            console.log(`Downloading ${file.nama}...`);
 
-    // Try multiple selector patterns for download buttons (BIMA is a Vue SPA)
-    const SELECTORS = [
-        "a[href*='.pdf']",
-        "button:has-text('Unduh')",
-        "a:has-text('Unduh')",
-        "button:has-text('Download')",
-        "a:has-text('Download')",
-        "a[download]",
-    ];
-
-    let totalClicked = 0;
-    for (const selector of SELECTORS) {
-        const btns = page.locator(selector);
-        const count = await btns.count();
-        if (count === 0) continue;
-        console.log(`Clicking ${count} button(s) matching "${selector}"...`);
-
-        for (let i = 0; i < count; i++) {
             try {
-                await btns.nth(i).click({ timeout: 5000 });
-                await page.waitForTimeout(800);
-                totalClicked++;
+                const signed = await getSignedUrl(filePath);
+                console.log(`  → signed URL expires: ${signed.expiresAt}`);
+
+                const bytes = await downloadPdf(signed.url, dest);
+                console.log(`[NEW]  ${bimaId}.pdf (${(bytes / 1024).toFixed(1)} KB)`);
+                newCount++;
             } catch (err) {
-                console.error(`[FAIL] ${selector}[${i}]: ${err.message}`);
+                console.error(`[FAIL] ${file.nama} — ${err.message}`);
                 failCount++;
             }
+
+            // Polite delay between downloads
+            await new Promise((r) => setTimeout(r, 500));
         }
     }
 
-    if (totalClicked === 0) {
-        console.log("No download buttons found — check selectors against current BIMA page structure.");
-    }
-
-    await browser.close();
     console.log(`\nDone. New: ${newCount} | Skipped: ${skipCount} | Failed: ${failCount}`);
 }
 
-main();
+main().catch((err) => {
+    console.error("Fatal:", err);
+    process.exit(1);
+});
