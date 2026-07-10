@@ -2,6 +2,10 @@
 # Install system cron to auto-sync BIMA PDFs every 6 hours.
 # Run once on the Linux server after deploying the app.
 # Usage: bash scripts/setup-cron.sh
+#
+# PREREQUISITE — run these once before the cron works:
+#   npx playwright install chromium
+#   npx playwright install-deps chromium   # Linux: installs system libs via apt
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 NODE_BIN="$(which node)"
