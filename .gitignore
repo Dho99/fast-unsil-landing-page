@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# bot scripts — runtime data, jangan di-commit
+/scripts/data/dikti-cache.json
+/scripts/data/sent-ids.json
+/scripts/data/wa-session/
+.env.bot
+
+# BIMA PDFs — downloaded at runtime by scripts/download-bima-pdfs.mjs, not in git
+/public/pdfs/bima/*.pdf

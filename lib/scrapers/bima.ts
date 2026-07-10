@@ -1,5 +1,11 @@
+import fs from "fs";
+import path from "path";
 import { Agent } from "undici";
 import type { NewsArticle } from "@/lib/constants";
+
+function sanitizeId(id: string | number): string {
+    return String(id).replace(/[^a-zA-Z0-9\-_]/g, "_").slice(0, 64);
+}
 
 // API uses a certificate that Node's default trust store can't verify
 const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
@@ -44,8 +50,12 @@ export async function scrapeBima(): Promise<NewsArticle[]> {
     if (body.code !== 200 || !Array.isArray(body.data)) return [];
 
     return body.data.slice(0, 10).map((item, i) => {
-        const pdfLink = item.files?.[0]?.url;
-        const link = pdfLink ?? PORTAL_URL;
+        const rawPdfLink = item.files?.[0]?.url;
+        const bimaId = sanitizeId(item.id);
+        const localPdfPath = `/pdfs/bima/${bimaId}.pdf`;
+        const localExists = fs.existsSync(
+            path.join(process.cwd(), "public", localPdfPath)
+        );
 
         return {
             id: `bima-${i}`,
@@ -57,8 +67,11 @@ export async function scrapeBima(): Promise<NewsArticle[]> {
                 ? new Date(item.tgl_pemberitaan).toISOString()
                 : new Date().toISOString(),
             excerpt: item.no_surat ? `No. ${item.no_surat}` : (item.ringkasan ?? ""),
-            link,
-            pdfLink,
+            link: PORTAL_URL,
+            // prefer local static file; fall back to live proxy if not yet downloaded
+            pdfLink: rawPdfLink
+                ? localExists ? localPdfPath : `/api/bima-pdf?idx=${i}`
+                : undefined,
             source: "BIMA",
         };
     });

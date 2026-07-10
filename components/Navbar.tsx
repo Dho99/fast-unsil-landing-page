@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar({
     scrolled,
@@ -18,6 +19,9 @@ export default function Navbar({
 }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const { theme, setTheme } = useTheme();
+    const pathname = usePathname();
+
+    const isInfoDiktiPage = pathname === "/info-dikti";
 
     return (
         <nav
@@ -29,11 +33,6 @@ export default function Navbar({
             )}
         >
             <div className="container flex items-center justify-between h-full">
-                {/* Logo — swap this div with <img src="/logo.png" className="h-9 w-auto" /> after bg removal */}
-                {/* <div className="h-9 w-[120px] border border-dashed border-[#3B82F6]/35 dark:border-[#3B82F6]/25 rounded flex items-center justify-center gap-1.5 bg-[#3B82F6]/04 dark:bg-[#3B82F6]/05">
-                    <div className="w-4 h-4 bg-[#DC2626]/15 border border-[#DC2626]/35 rounded-sm flex items-center justify-center text-[7px] text-[#DC2626]/60 select-none">⚡</div>
-                    <span className="font-bold text-[11px] tracking-[0.22em] font-heading text-[#3B82F6]/55 dark:text-[#3B82F6]/45 select-none">FAST</span>
-                </div> */}
                 <Image
                     src="/logo.png"
                     alt="Logo"
@@ -50,7 +49,8 @@ export default function Navbar({
                         return (
                             <Link
                                 key={l}
-                                href={NAV_ANCHORS[l]}
+                                href={isInfoDiktiPage ? "/" : NAV_ANCHORS[l]}
+                                // href={NAV_ANCHORS[l]}
                                 className={cn(
                                     "text-md tracking-[0.07em] transition-colors duration-200 relative pb-1",
                                     isActive

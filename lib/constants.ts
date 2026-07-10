@@ -47,7 +47,7 @@ export const CARDS: CardData[] = [
 ];
 
 export const NAV_ANCHORS: Record<string, string> = {
-    Beranda: "#beranda",
+    Beranda: "/",
     Tentang: "#tentang",
     Riset: "#riset",
     Anggota: "#anggota",
