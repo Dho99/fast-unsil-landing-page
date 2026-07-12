@@ -66,6 +66,7 @@ export interface NewsArticle {
     source?: string;
     pdfLink?: string;
     publishedAt?: string;
+    createdAt?: string;
 }
 
 export const NEWS: NewsArticle[] = [

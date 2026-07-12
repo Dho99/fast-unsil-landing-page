@@ -41,6 +41,18 @@ export function formatIsoToDisplay(iso: string): string {
     });
 }
 
+export function formatCreatedAt(iso: string): string {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const ii = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    return `${dd}:${mm}:${yyyy} ${hh}:${ii}:${ss}`;
+}
+
 export function formatPublishedAt(iso: string): string {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;

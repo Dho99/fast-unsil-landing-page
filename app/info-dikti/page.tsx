@@ -1,7 +1,7 @@
 import { fetchInfoDikti } from "@/lib/scrapers";
 import type { NewsArticle } from "@/lib/constants";
 import NavbarWrapper from "@/components/NavbarWrapper";
-import { formatIsoToDisplay } from "@/lib/scrapers/utils";
+import { formatIsoToDisplay, formatCreatedAt } from "@/lib/scrapers/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -43,40 +43,41 @@ function PdfBadge({ href }: { href: string }) {
     );
 }
 
-function NewsCard({ item }: { item: NewsArticle }) {
+function BeritaRow({ item }: { item: NewsArticle }) {
     const pdfUrl = item.pdfLink ?? (isPdfLink(item.link) ? item.link : undefined);
     const titleLink = !isPdfLink(item.link) ? item.link : undefined;
 
     return (
-        <div className="border border-border rounded-lg p-4 flex flex-col gap-2 hover:bg-muted/30 transition-colors">
-            <div className="flex items-center gap-2 flex-wrap">
+        <li className="py-3 border-b border-border/40 last:border-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
                 <SourceBadge source={item.source} />
                 <span className="font-mono text-xs text-muted-foreground">
                     {formatIsoToDisplay(item.date)}
                 </span>
-            </div>
-            <div className="flex-1 min-w-0">
-                {titleLink ? (
-                    <a
-                        href={titleLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium leading-snug text-foreground hover:text-primary transition-colors"
-                    >
-                        {item.title}
-                    </a>
-                ) : (
-                    <span className="text-sm font-medium leading-snug text-foreground">
-                        {item.title}
+                {item.createdAt && (
+                    <span className="font-mono text-[10px] text-muted-foreground/40 ml-auto">
+                        {formatCreatedAt(item.createdAt)}
                     </span>
                 )}
             </div>
-            {pdfUrl && (
-                <div>
-                    <PdfBadge href={pdfUrl} />
-                </div>
-            )}
-        </div>
+            <div className="flex items-baseline gap-2">
+                <span className="flex-1 min-w-0 text-sm leading-snug">
+                    {titleLink ? (
+                        <a
+                            href={titleLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground hover:text-primary transition-colors"
+                        >
+                            {item.title}
+                        </a>
+                    ) : (
+                        <span className="text-foreground">{item.title}</span>
+                    )}
+                </span>
+                {pdfUrl && <PdfBadge href={pdfUrl} />}
+            </div>
+        </li>
     );
 }
 
@@ -85,22 +86,29 @@ function AnnouncementRow({ item }: { item: NewsArticle }) {
     const titleLink = !isPdfLink(item.link) ? item.link : undefined;
 
     return (
-        <li className="flex items-baseline gap-2 py-2 border-b border-border/40 last:border-0">
-            <span className="flex-1 min-w-0 text-sm leading-snug">
-                {titleLink ? (
-                    <a
-                        href={titleLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-foreground hover:text-primary transition-colors"
-                    >
-                        {item.title}
-                    </a>
-                ) : (
-                    <span className="text-foreground">{item.title}</span>
-                )}
-            </span>
-            {pdfUrl && <PdfBadge href={pdfUrl} />}
+        <li className="py-2 border-b border-border/40 last:border-0">
+            <div className="flex items-baseline gap-2">
+                <span className="flex-1 min-w-0 text-sm leading-snug">
+                    {titleLink ? (
+                        <a
+                            href={titleLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground hover:text-primary transition-colors"
+                        >
+                            {item.title}
+                        </a>
+                    ) : (
+                        <span className="text-foreground">{item.title}</span>
+                    )}
+                </span>
+                {pdfUrl && <PdfBadge href={pdfUrl} />}
+            </div>
+            {item.createdAt && (
+                <div className="font-mono text-[10px] text-muted-foreground/40 mt-0.5">
+                    {formatCreatedAt(item.createdAt)}
+                </div>
+            )}
         </li>
     );
 }
@@ -160,14 +168,16 @@ export default async function InfoDiktiPage() {
                 ) : (
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                         <section className="flex-1 min-w-0 w-full">
-                            <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
-                                Berita &amp; Pengumuman
-                            </h2>
                             {beritaItems.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {beritaItems.map((item) => (
-                                        <NewsCard key={item.id} item={item} />
-                                    ))}
+                                <div className="border border-border rounded-lg p-4">
+                                    <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
+                                        Berita &amp; Pengumuman
+                                    </h2>
+                                    <ul>
+                                        {beritaItems.map((item) => (
+                                            <BeritaRow key={item.id} item={item} />
+                                        ))}
+                                    </ul>
                                 </div>
                             ) : (
                                 <p className="text-sm text-muted-foreground">

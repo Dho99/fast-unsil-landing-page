@@ -60,6 +60,7 @@ export async function parseRssFeed(
             excerpt,
             link,
             source: opts.source,
+            createdAt: new Date().toISOString(),
         });
     });
 

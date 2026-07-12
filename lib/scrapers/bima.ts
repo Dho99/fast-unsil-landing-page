@@ -123,6 +123,7 @@ export async function scrapeBima(): Promise<NewsArticle[]> {
                 ? localExists ? localPdfPath : `/api/bima-pdf?idx=${i}`
                 : undefined,
             source: "BIMA",
+            createdAt: new Date().toISOString(),
         };
     });
 }

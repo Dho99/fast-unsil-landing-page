@@ -70,6 +70,7 @@ export async function scrapeBrin(): Promise<NewsArticle[]> {
             link,
             pdfLink,
             source: "BRIN Pendanaan Risnov",
+            createdAt: new Date().toISOString(),
         });
     });
 

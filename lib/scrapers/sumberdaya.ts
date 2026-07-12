@@ -55,6 +55,7 @@ export async function scrapeSumberdaya(): Promise<NewsArticle[]> {
             excerpt,
             link,
             source: "Direktorat Sumber Daya",
+            createdAt: new Date().toISOString(),
         });
     });
 

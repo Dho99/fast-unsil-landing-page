@@ -82,6 +82,7 @@ export async function scrapeHiliriset(): Promise<NewsArticle[]> {
             link,
             pdfLink,
             source: "Hiliriset",
+            createdAt: new Date().toISOString(),
         };
     });
 }

@@ -65,6 +65,7 @@ export async function scrapeKemdikti(): Promise<NewsArticle[]> {
             excerpt: "",
             link,
             source: "Kemdiktisaintek",
+            createdAt: new Date().toISOString(),
         });
         count++;
     });
