@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-// import { Orbitron, Rajdhani, Share_Tech_Mono } from "next/font/google";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 // const orbitron = Orbitron({
 //     subsets: ["latin"],
@@ -53,14 +54,17 @@ export default function RootLayout({
             )}
             suppressHydrationWarning
         >
-            <body className="min-h-full flex flex-col">
+            <body className="w-dvw h-dvh ">
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"
                     enableSystem
                     disableTransitionOnChange
                 >
-                    {children}
+                    <SidebarProvider defaultOpen={false}>
+                        <AppSidebar />
+                        <div className="flex-1 overflow-auto">{children}</div>
+                    </SidebarProvider>
                 </ThemeProvider>
             </body>
         </html>

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { NAV, NAV_ANCHORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function Navbar({
     scrolled,
@@ -17,22 +17,22 @@ export default function Navbar({
     scrolled: boolean;
     activeSection: string;
 }) {
-    const [menuOpen, setMenuOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
+    const { toggleSidebar } = useSidebar();
 
     const isInfoDiktiPage = pathname === "/info-dikti";
 
     return (
         <nav
             className={cn(
-                "sticky top-0 z-[100] flex items-center justify-center h-16 transition-all duration-[350ms] px-[clamp(16px,4vw,56px)]",
+                "sticky top-0 z-[100] flex items-center justify-center h-16 w-full box-border transition-all duration-[350ms] px-[clamp(16px,4vw,56px)]",
                 scrolled
                     ? "bg-white/70 dark:bg-black/70 backdrop-blur-lg border-b border-[rgba(59,130,246,0.15)]"
                     : "bg-transparent border-b-0",
             )}
         >
-            <div className="container flex items-center justify-between h-full">
+            <div className="max-w-7xl mx-auto w-full flex items-center justify-between h-full">
                 <Image
                     src="/logo.png"
                     alt="Logo"
@@ -106,52 +106,12 @@ export default function Navbar({
                     </button>
                     <button
                         className="bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1 flex items-center justify-center"
-                        onClick={() => setMenuOpen(true)}
+                        onClick={toggleSidebar}
                         aria-label="Open menu"
                     >
                         <Menu size={24} />
                     </button>
                 </div>
-
-                {/* Mobile overlay menu */}
-                {menuOpen && (
-                    <div className="animate-in fade-in-0 duration-200 fixed inset-0 z-[200] flex flex-col items-center justify-center gap-8 bg-[color-mix(in_srgb,var(--bg)_97%,transparent)]">
-                        <button
-                            className="absolute top-5 right-5 bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1"
-                            onClick={() => setMenuOpen(false)}
-                            aria-label="Close menu"
-                        >
-                            <X size={24} />
-                        </button>
-                        {NAV.map((l, idx) => {
-                            const sectionId = NAV_ANCHORS[l].replace("#", "");
-                            const isActive = activeSection === sectionId;
-                            return (
-                                <a
-                                    key={l}
-                                    href={NAV_ANCHORS[l]}
-                                    style={{ animationDelay: `${idx * 80}ms` }}
-                                    className={cn(
-                                        "animate-in fade-in-0 slide-in-from-bottom-4 text-lg tracking-[0.12em] transition-colors duration-200 hover:text-[#3B82F6]",
-                                        isActive
-                                            ? "text-[#3B82F6] font-semibold"
-                                            : "text-subtle-text",
-                                    )}
-                                    onClick={() => setMenuOpen(false)}
-                                >
-                                    {l}
-                                </a>
-                            );
-                        })}
-                        <button
-                            style={{ animationDelay: "320ms" }}
-                            className="animate-in fade-in-0 slide-in-from-bottom-4 bg-[#DC2626] text-white border-0 px-8 py-3 rounded-[24px] text-sm font-semibold cursor-pointer tracking-[0.07em] mt-2 hover:opacity-80 transition-opacity"
-                            onClick={() => setMenuOpen(false)}
-                        >
-                            Bergabung
-                        </button>
-                    </div>
-                )}
             </div>
         </nav>
     );

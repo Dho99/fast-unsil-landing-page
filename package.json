@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync-pdfs": "node scripts/download-bima-pdfs.mjs"
+    "sync-pdfs": "node scripts/download-all-pdfs.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

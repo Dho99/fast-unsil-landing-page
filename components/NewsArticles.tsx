@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { NEWS } from "@/lib/constants";
 import type { NewsArticle } from "@/lib/constants";
-import { formatIsoToDisplay } from "@/lib/scrapers/utils";
+import { formatIsoToDisplay, formatPublishedAt } from "@/lib/scrapers/utils";
 
 function NewsCard({ article }: { article: NewsArticle }) {
     const hasLink = !!article.link && article.link !== "#";
@@ -14,7 +14,7 @@ function NewsCard({ article }: { article: NewsArticle }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col rounded-2xl border border-[rgba(59,130,246,0.12)] overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+            className="flex flex-col rounded-2xl border border-border overflow-hidden hover:-translate-y-1 transition-transform duration-300"
             style={{ background: "var(--card-custom-bg)" }}
         >
             <div
@@ -45,12 +45,19 @@ function NewsCard({ article }: { article: NewsArticle }) {
                 )}
 
                 <div className="flex items-center justify-between mt-2">
-                    <span className="font-mono text-[11px] text-subtle-text tracking-[0.12em]">
-                        {formatIsoToDisplay(article.date)}
-                        {article.source && (
-                            <span className="ml-2 opacity-60">· {article.source}</span>
+                    <div>
+                        <span className="font-mono text-[11px] text-subtle-text tracking-[0.12em]">
+                            {formatIsoToDisplay(article.date)}
+                            {article.source && (
+                                <span className="ml-2 opacity-60">· {article.source}</span>
+                            )}
+                        </span>
+                        {article.publishedAt && (
+                            <div className="font-mono text-[10px] text-muted-text tracking-[0.1em] mt-0.5">
+                                {formatPublishedAt(article.publishedAt)}
+                            </div>
                         )}
-                    </span>
+                    </div>
                     {hasLink ? (
                         <a
                             href={article.link}

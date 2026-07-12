@@ -48,6 +48,7 @@ export async function scrapeKemdikti(): Promise<NewsArticle[]> {
                 .trim() ?? "";
 
         const date = parseIndonesianDate(dateText) ?? new Date().toISOString();
+        const publishedAt = parseIndonesianDate(dateText) ?? new Date().toISOString();
 
         // Category tag if present
         const categoryEl = parent.find("[class*='categ'],[class*='tag'],[class*='label']").first();
@@ -60,6 +61,7 @@ export async function scrapeKemdikti(): Promise<NewsArticle[]> {
             imagePlaceholder: GRADIENT,
             title,
             date,
+            publishedAt,
             excerpt: "",
             link,
             source: "Kemdiktisaintek",

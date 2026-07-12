@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import * as cheerio from "cheerio";
 import type { NewsArticle } from "@/lib/constants";
 
@@ -5,6 +7,10 @@ const URL = "https://pendanaan-risnov.brin.go.id/pendanaan";
 const CATEGORY_COLOR = "#DC2626";
 const GRADIENT =
     "linear-gradient(135deg, #3b0a0a 0%, #1a0505 60%, #2a1010 100%)";
+
+function sanitizeId(id: string | number): string {
+    return String(id).replace(/[^a-zA-Z0-9\-_]/g, "_").slice(0, 64);
+}
 
 function timestampToIso(raw: string): string {
     const ts = parseInt(raw.trim(), 10);
@@ -40,7 +46,16 @@ export async function scrapeBrin(): Promise<NewsArticle[]> {
         const refNum = $content.find(".pengumuman-top b").first().text().trim();
         const excerpt = refNum ? `No. ${refNum}` : "";
 
-        const pdfLink = $content.find(".pengumuman-dokumen li a").first().attr("href");
+        const rawPdfLink = $content.find(".pengumuman-dokumen li a").first().attr("href");
+        const brinId = sanitizeId(title).slice(0, 48);
+        const localPdfPath = `/pdfs/brin/${brinId}.pdf`;
+        const localExists = fs.existsSync(
+            path.join(process.cwd(), "public", localPdfPath)
+        );
+
+        const pdfLink = rawPdfLink
+            ? (localExists ? localPdfPath : `/api/brin-pdf?idx=${i}`)
+            : undefined;
         const link = pdfLink ?? URL;
 
         items.push({
@@ -50,6 +65,7 @@ export async function scrapeBrin(): Promise<NewsArticle[]> {
             imagePlaceholder: GRADIENT,
             title,
             date,
+            publishedAt: date,
             excerpt,
             link,
             pdfLink,

@@ -54,7 +54,7 @@ export default function Hero() {
 
                 <div className="flex gap-3 mt-[30px] justify-center flex-wrap">
                     <button className="bg-[#3B82F6] text-white border-0 h-12 px-9 rounded-md text-sm font-bold cursor-pointer tracking-[0.07em] w-full sm:w-48 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(59,130,246,0.35)]">
-                        Eksplor FAST →
+                        Eksplor FAST
                     </button>
                     <button className="bg-transparent text-[#374151] dark:text-hero-sub h-12 px-9 rounded-md text-sm font-medium cursor-pointer border border-[#374151]/25 dark:border-[color-mix(in_srgb,var(--hero-sub)_20%,transparent)] sm:max-w-42 w-full transition-all duration-200 hover:-translate-y-0.5 border-[rgba(192,203,217,0.5)] text-white backdrop-blur ">
                         Lihat Riset

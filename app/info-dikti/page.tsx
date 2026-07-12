@@ -158,13 +158,13 @@ export default async function InfoDiktiPage() {
                         Belum ada data. Coba muat ulang halaman.
                     </p>
                 ) : (
-                    <div className="flex gap-6 items-start">
-                        <section className="flex-1 min-w-0">
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                        <section className="flex-1 min-w-0 w-full">
                             <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                                 Berita &amp; Pengumuman
                             </h2>
                             {beritaItems.length > 0 ? (
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {beritaItems.map((item) => (
                                         <NewsCard key={item.id} item={item} />
                                     ))}
@@ -176,7 +176,7 @@ export default async function InfoDiktiPage() {
                             )}
                         </section>
 
-                        <aside className="w-72 shrink-0 flex flex-col gap-4">
+                        <aside className="w-full md:w-72 shrink-0 flex flex-col gap-4">
                             {sidebarCategories.map(([source, catItems]) => (
                                 <CategoryBox key={source} title={source} items={catItems} />
                             ))}

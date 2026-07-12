@@ -104,15 +104,18 @@ export async function scrapeBima(): Promise<NewsArticle[]> {
             path.join(process.cwd(), "public", localPdfPath)
         );
 
+        const itemDate = item.tgl_pemberitaan
+            ? new Date(item.tgl_pemberitaan).toISOString()
+            : new Date().toISOString();
+
         return {
             id: `bima-${i}`,
             category: "BIMA",
             categoryColor: CATEGORY_COLOR,
             imagePlaceholder: GRADIENT,
             title: item.judul,
-            date: item.tgl_pemberitaan
-                ? new Date(item.tgl_pemberitaan).toISOString()
-                : new Date().toISOString(),
+            date: itemDate,
+            publishedAt: itemDate,
             excerpt: item.no_surat ? `No. ${item.no_surat}` : (item.ringkasan ?? ""),
             link: PORTAL_URL,
             // prefer local static file; fall back to live proxy if not yet downloaded

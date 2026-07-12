@@ -43,6 +43,7 @@ export async function parseRssFeed(
         const date = pubDateRaw
             ? new Date(pubDateRaw).toISOString()
             : new Date().toISOString();
+        const publishedAt = date;
 
         // Strip CDATA and HTML tags from description
         const rawDesc = $el.find("description").text().trim();
@@ -55,6 +56,7 @@ export async function parseRssFeed(
             imagePlaceholder: opts.imagePlaceholder,
             title,
             date,
+            publishedAt,
             excerpt,
             link,
             source: opts.source,

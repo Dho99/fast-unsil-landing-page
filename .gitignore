@@ -46,5 +46,7 @@ next-env.d.ts
 /scripts/data/wa-session/
 .env.bot
 
-# BIMA PDFs — downloaded at runtime by scripts/download-bima-pdfs.mjs, not in git
+# PDFs — downloaded at runtime by download-*-pdfs.mjs scripts, not in git
 /public/pdfs/bima/*.pdf
+/public/pdfs/hiliriset/*.pdf
+/public/pdfs/brin/*.pdf

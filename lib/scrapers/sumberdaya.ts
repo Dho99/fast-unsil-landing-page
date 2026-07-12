@@ -42,6 +42,7 @@ export async function scrapeSumberdaya(): Promise<NewsArticle[]> {
         // p.artikel-foot comes after the body <p>
         const footText = $body.next("p.artikel-foot").text().trim();
         const date = parseIndonesianDate(footText) ?? new Date().toISOString();
+        const publishedAt = parseIndonesianDate(footText) ?? new Date().toISOString();
 
         items.push({
             id: `sumberdaya-${items.length}`,
@@ -50,6 +51,7 @@ export async function scrapeSumberdaya(): Promise<NewsArticle[]> {
             imagePlaceholder: GRADIENT,
             title,
             date,
+            publishedAt,
             excerpt,
             link,
             source: "Direktorat Sumber Daya",
