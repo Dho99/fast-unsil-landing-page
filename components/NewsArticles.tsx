@@ -114,9 +114,7 @@ export default function NewsArticles() {
 
                 <div className="flex justify-end mt-8">
                     <a
-                        href="/api/rss"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="/rss"
                         className="text-[#3B82F6] font-mono text-[13px] tracking-[0.1em] hover:opacity-70 transition-opacity"
                     >
                         RSS Feed →

@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Sun, Moon } from "lucide-react";
+import { Menu, Sun, Moon, Rss } from "lucide-react";
 import { useTheme } from "next-themes";
 import { NAV, NAV_ANCHORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,14 @@ export default function Navbar({
 
                 {/* Desktop right section */}
                 <div className="hidden md:flex items-center gap-x-5">
-                    {/* Theme toggle */}
+                    <Link
+                        href="/rss"
+                        className="bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1.5 flex items-center justify-center rounded-md transition-colors duration-200 hover:bg-[rgba(0,212,170,0.1)]"
+                        aria-label="RSS feed"
+                        title="RSS Feed"
+                    >
+                        <Rss size={18} />
+                    </Link>
                     <button
                         onClick={() =>
                             setTheme(theme === "dark" ? "light" : "dark")
@@ -91,6 +98,14 @@ export default function Navbar({
 
                 {/* Mobile hamburger + theme toggle */}
                 <div className="md:hidden flex items-center gap-2">
+                    <Link
+                        href="/rss"
+                        className="bg-transparent border-0 text-[#3B82F6] cursor-pointer p-1 flex items-center justify-center"
+                        aria-label="RSS feed"
+                        title="RSS Feed"
+                    >
+                        <Rss size={20} />
+                    </Link>
                     <button
                         onClick={() =>
                             setTheme(theme === "dark" ? "light" : "dark")

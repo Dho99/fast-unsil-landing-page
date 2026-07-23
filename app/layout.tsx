@@ -33,6 +33,20 @@ export const metadata: Metadata = {
     title: "FAST — Forensic and Security Research Group",
     description:
         "Komunitas riset keamanan digital Universitas Siliwangi — forensik, penetration testing, dan penelitian siber.",
+    alternates: {
+        types: {
+            "application/rss+xml": [
+                {
+                    url: "https://fast.unsil.ac.id/rss",
+                    title: "FAST UNSIL – Agregasi Berita Dikti",
+                },
+                {
+                    url: "https://fast.unsil.ac.id/rss/publications",
+                    title: "FAST UNSIL – Publikasi Ilmiah",
+                },
+            ],
+        },
+    },
 };
 
 export default function RootLayout({

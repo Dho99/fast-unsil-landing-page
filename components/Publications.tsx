@@ -92,9 +92,7 @@ export default function Publications() {
 
                 <div className="flex justify-end gap-4 mt-8">
                     <a
-                        href="/api/rss/publications"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="/rss/publications"
                         className="text-[#3B82F6] font-mono text-[13px] tracking-[0.1em] hover:opacity-70 transition-opacity"
                     >
                         RSS Publikasi →

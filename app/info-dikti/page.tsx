@@ -1,7 +1,7 @@
 import { fetchInfoDikti } from "@/lib/scrapers";
 import type { NewsArticle } from "@/lib/constants";
 import NavbarWrapper from "@/components/NavbarWrapper";
-import { formatIsoToDisplay, formatCreatedAt } from "@/lib/scrapers/utils";
+import InfoDiktiCard from "@/components/InfoDiktiCard";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,122 +12,10 @@ export const metadata: Metadata = {
 const BERITA_SOURCES = new Set(["Kemdiktisaintek", "Direktorat Sumber Daya"]);
 const SIDEBAR_ORDER = ["BIMA", "Hiliriset", "BRIN Pendanaan Risnov"];
 const SIDEBAR_LABEL: Record<string, string> = {
-    "BIMA": "BIMA",
-    "Hiliriset": "Hiliriset",
+    BIMA: "BIMA",
+    Hiliriset: "Hiliriset",
     "BRIN Pendanaan Risnov": "BRIN",
 };
-
-function isPdfLink(url?: string): boolean {
-    if (!url) return false;
-    return url.toLowerCase().includes(".pdf");
-}
-
-function SourceBadge({ source }: { source?: string }) {
-    return (
-        <span className="inline-block shrink-0 font-mono text-xs text-muted-foreground border border-border rounded px-1.5 py-0.5">
-            {source ?? "Dikti"}
-        </span>
-    );
-}
-
-function PdfBadge({ href }: { href: string }) {
-    return (
-        <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block shrink-0 font-mono text-xs text-red-400 border border-red-400/40 rounded px-1.5 py-0.5 hover:bg-red-400/10 transition-colors"
-        >
-            PDF
-        </a>
-    );
-}
-
-function BeritaRow({ item }: { item: NewsArticle }) {
-    const pdfUrl = item.pdfLink ?? (isPdfLink(item.link) ? item.link : undefined);
-    const titleLink = !isPdfLink(item.link) ? item.link : undefined;
-
-    return (
-        <li className="py-3 border-b border-border/40 last:border-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-                <SourceBadge source={item.source} />
-                <span className="font-mono text-xs text-muted-foreground">
-                    {formatIsoToDisplay(item.date)}
-                </span>
-                {item.createdAt && (
-                    <span className="font-mono text-[10px] text-muted-foreground/40 ml-auto">
-                        {formatCreatedAt(item.createdAt)}
-                    </span>
-                )}
-            </div>
-            <div className="flex items-baseline gap-2">
-                <span className="flex-1 min-w-0 text-sm leading-snug">
-                    {titleLink ? (
-                        <a
-                            href={titleLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-foreground hover:text-primary transition-colors"
-                        >
-                            {item.title}
-                        </a>
-                    ) : (
-                        <span className="text-foreground">{item.title}</span>
-                    )}
-                </span>
-                {pdfUrl && <PdfBadge href={pdfUrl} />}
-            </div>
-        </li>
-    );
-}
-
-function AnnouncementRow({ item }: { item: NewsArticle }) {
-    const pdfUrl = item.pdfLink ?? (isPdfLink(item.link) ? item.link : undefined);
-    const titleLink = !isPdfLink(item.link) ? item.link : undefined;
-
-    return (
-        <li className="py-2 border-b border-border/40 last:border-0">
-            <div className="flex items-baseline gap-2">
-                <span className="flex-1 min-w-0 text-sm leading-snug">
-                    {titleLink ? (
-                        <a
-                            href={titleLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-foreground hover:text-primary transition-colors"
-                        >
-                            {item.title}
-                        </a>
-                    ) : (
-                        <span className="text-foreground">{item.title}</span>
-                    )}
-                </span>
-                {pdfUrl && <PdfBadge href={pdfUrl} />}
-            </div>
-            {item.createdAt && (
-                <div className="font-mono text-[10px] text-muted-foreground/40 mt-0.5">
-                    {formatCreatedAt(item.createdAt)}
-                </div>
-            )}
-        </li>
-    );
-}
-
-function CategoryBox({ title, items }: { title: string; items: NewsArticle[] }) {
-    if (items.length === 0) return null;
-    return (
-        <div className="border border-border rounded-lg p-4">
-            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                {SIDEBAR_LABEL[title] ?? title}
-            </h3>
-            <ul>
-                {items.map((item) => (
-                    <AnnouncementRow key={item.id} item={item} />
-                ))}
-            </ul>
-        </div>
-    );
-}
 
 function groupBySource(items: NewsArticle[]): Map<string, NewsArticle[]> {
     return items.reduce((map, item) => {
@@ -166,31 +54,20 @@ export default async function InfoDiktiPage() {
                         Belum ada data. Coba muat ulang halaman.
                     </p>
                 ) : (
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                        <section className="flex-1 min-w-0 w-full">
-                            {beritaItems.length > 0 ? (
-                                <div className="border border-border rounded-lg p-4">
-                                    <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-                                        Berita &amp; Pengumuman
-                                    </h2>
-                                    <ul>
-                                        {beritaItems.map((item) => (
-                                            <BeritaRow key={item.id} item={item} />
-                                        ))}
-                                    </ul>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">
-                                    Belum ada data berita.
-                                </p>
-                            )}
-                        </section>
-
-                        <aside className="w-full md:w-72 shrink-0 flex flex-col gap-4">
-                            {sidebarCategories.map(([source, catItems]) => (
-                                <CategoryBox key={source} title={source} items={catItems} />
-                            ))}
-                        </aside>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+                        <InfoDiktiCard
+                            title="Berita & Pengumuman"
+                            items={beritaItems}
+                            variant="berita"
+                        />
+                        {sidebarCategories.map(([source, catItems]) => (
+                            <InfoDiktiCard
+                                key={source}
+                                title={SIDEBAR_LABEL[source] ?? source}
+                                items={catItems}
+                                variant="announcement"
+                            />
+                        ))}
                     </div>
                 )}
             </div>
