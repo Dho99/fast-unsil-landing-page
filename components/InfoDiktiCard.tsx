@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { NewsArticle } from "@/lib/constants";
-import { formatIsoToDisplay, formatCreatedAt } from "@/lib/scrapers/utils";
+import { formatIsoToDisplay, formatPublishedAt } from "@/lib/scrapers/utils";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20] as const;
 const DEFAULT_PAGE_SIZE = 5;
@@ -32,29 +32,27 @@ function ItemRow({
     item: NewsArticle;
     variant: "berita" | "announcement";
 }) {
+    // Prefer the PDF link when the item is a document; otherwise the article page.
     const pdfUrl = item.pdfLink ?? (isPdfLink(item.link) ? item.link : undefined);
-    const titleLink = !isPdfLink(item.link) ? item.link : undefined;
+    const titleHref =
+        pdfUrl ?? (item.link && item.link !== "#" ? item.link : undefined);
 
     const meta =
         variant === "berita"
             ? [
                   item.source ?? "Dikti",
                   formatIsoToDisplay(item.date),
-                  item.createdAt ? formatCreatedAt(item.createdAt) : null,
-              ]
-                  .filter(Boolean)
-                  .join(" · ")
-            : item.createdAt
-              ? formatCreatedAt(item.createdAt)
-              : null;
+                  formatPublishedAt(item.date),
+              ].join(" · ")
+            : formatPublishedAt(item.date);
 
     return (
         <li className="py-2 border-b border-border/40 last:border-0">
             <div className="flex items-baseline gap-2">
                 <span className="flex-1 min-w-0 text-sm leading-snug">
-                    {titleLink ? (
+                    {titleHref ? (
                         <a
-                            href={titleLink}
+                            href={titleHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-foreground hover:text-primary transition-colors"

@@ -10,11 +10,12 @@ export const metadata: Metadata = {
 };
 
 const BERITA_SOURCES = new Set(["Kemdiktisaintek", "Direktorat Sumber Daya"]);
-const SIDEBAR_ORDER = ["BIMA", "Hiliriset", "BRIN Pendanaan Risnov"];
+const SIDEBAR_ORDER = ["BIMA", "Hiliriset", "BRIN Pendanaan Risnov", "ARJUNA"];
 const SIDEBAR_LABEL: Record<string, string> = {
     BIMA: "BIMA",
     Hiliriset: "Hiliriset",
     "BRIN Pendanaan Risnov": "BRIN",
+    ARJUNA: "ARJUNA",
 };
 
 function groupBySource(items: NewsArticle[]): Map<string, NewsArticle[]> {

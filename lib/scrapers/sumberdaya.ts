@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import type { NewsArticle } from "@/lib/constants";
-import { parseIndonesianDate } from "./utils";
+import { parseIndonesianDate, fetchWithRetry } from "./utils";
 
 const BASE = "https://sumberdayadikti.kemdiktisaintek.go.id";
 const URL = `${BASE}/web/artikel`;
@@ -9,10 +9,15 @@ const GRADIENT =
     "linear-gradient(135deg, #1a1040 0%, #0d1b35 60%, #1e2a4a 100%)";
 
 export async function scrapeSumberdaya(): Promise<NewsArticle[]> {
-    const res = await fetch(URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-        signal: AbortSignal.timeout(8000),
-    });
+    let res: Response;
+    try {
+        res = await fetchWithRetry(URL, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
+            signal: AbortSignal.timeout(20000),
+        });
+    } catch {
+        return [];
+    }
     if (!res.ok) return [];
 
     const html = await res.text();

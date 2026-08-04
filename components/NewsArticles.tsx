@@ -35,7 +35,18 @@ function NewsCard({ article }: { article: NewsArticle }) {
                 </span>
 
                 <h3 className="font-heading font-bold text-content text-[1.05rem] leading-[1.45] line-clamp-2">
-                    {article.title}
+                    {hasLink ? (
+                        <a
+                            href={article.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="transition-colors hover:text-[#3B82F6]"
+                        >
+                            {article.title}
+                        </a>
+                    ) : (
+                        article.title
+                    )}
                 </h3>
 
                 {article.excerpt && (

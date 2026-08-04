@@ -13,6 +13,26 @@ const ID_MONTHS: Record<string, number> = {
     desember: 11, des: 11, dec: 11,
 };
 
+// Retry transient network failures (slow gov sites, flaky TLS).
+export async function fetchWithRetry(
+    url: string,
+    init?: RequestInit,
+    retries = 2,
+): Promise<Response> {
+    let lastErr: unknown;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const res = await fetch(url, init);
+            if (res.ok || res.status < 500) return res;
+            lastErr = new Error(`HTTP ${res.status}`);
+        } catch (err) {
+            lastErr = err;
+        }
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+    throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
 // Parse "25 Juni 2026", "25 Jun 2026 15:21:21", ISO dates, etc.
 export function parseIndonesianDate(raw: string): string | null {
     if (!raw) return null;

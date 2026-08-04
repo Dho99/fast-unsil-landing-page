@@ -10,7 +10,8 @@ function sanitizeId(id: string | number): string {
 // API uses a certificate that Node's default trust store can't verify
 const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
 
-const API_URL = "https://apibima.kemdiktisaintek.go.id/api/v1/pengumuman";
+const API_URL =
+    "https://apibima.kemdiktisaintek.go.id/api/v1/pengumuman?sort=tgl_created:desc&page=1:10&criteria=is_deleted:false,type:pengumuman";
 const PORTAL_URL = "https://bima.kemdiktisaintek.go.id/pengumuman";
 const PORTAL_ORIGIN = "https://bima.kemdiktisaintek.go.id";
 const CATEGORY_COLOR = "#D97706";

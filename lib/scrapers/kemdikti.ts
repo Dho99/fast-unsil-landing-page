@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
+import type { AnyNode } from "domhandler";
 import type { NewsArticle } from "@/lib/constants";
-import { parseIndonesianDate } from "./utils";
+import { parseIndonesianDate, fetchWithRetry } from "./utils";
 
 const BASE = "https://kemdiktisaintek.go.id";
 const URL = `${BASE}/announcement`;
@@ -8,11 +9,39 @@ const CATEGORY_COLOR = "#3B82F6";
 const GRADIENT =
     "linear-gradient(135deg, #1e3a5f 0%, #0d1b35 60%, #1a2840 100%)";
 
+// Search outward from the title element for a date (text or <time datetime>).
+function findDateText($: cheerio.CheerioAPI, $el: cheerio.Cheerio<AnyNode>): string {
+    let node: cheerio.Cheerio<AnyNode> = $el;
+    for (let depth = 0; node.length && depth < 6; depth++) {
+        const timeAttr = node.find("time[datetime]").first().attr("datetime");
+        if (timeAttr) return timeAttr;
+
+        const match = node
+            .find("span, p, div, small, time")
+            .filter((_, el) => {
+                const t = $(el).text().trim();
+                return t.length >= 3 && t.length <= 45 && /\d{1,2}\s+\w+\s+\d{4}/.test(t);
+            })
+            .first()
+            .text()
+            .trim();
+        if (match) return match;
+
+        node = node.parent();
+    }
+    return "";
+}
+
 export async function scrapeKemdikti(): Promise<NewsArticle[]> {
-    const res = await fetch(URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-        signal: AbortSignal.timeout(8000),
-    });
+    let res: Response;
+    try {
+        res = await fetchWithRetry(URL, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
+            signal: AbortSignal.timeout(20000),
+        });
+    } catch {
+        return [];
+    }
     if (!res.ok) return [];
 
     const html = await res.text();
@@ -36,22 +65,14 @@ export async function scrapeKemdikti(): Promise<NewsArticle[]> {
         const title = anchorText;
 
         // Date: look for text matching date pattern near the element
-        const parent = $el.closest("[class]");
-        const dateText =
-            parent
-                .find("*")
-                .filter((_, el) =>
-                    /\d{1,2}\s+\w+\s+\d{4}/.test($(el).text())
-                )
-                .first()
-                .text()
-                .trim() ?? "";
+        const dateText = findDateText($, $el);
 
         const date = parseIndonesianDate(dateText) ?? new Date().toISOString();
         const publishedAt = parseIndonesianDate(dateText) ?? new Date().toISOString();
 
         // Category tag if present
-        const categoryEl = parent.find("[class*='categ'],[class*='tag'],[class*='label']").first();
+        const container = $el.closest("[class]");
+        const categoryEl = container.find("[class*='categ'],[class*='tag'],[class*='label']").first();
         const category = categoryEl.text().trim() || "Kemdikti";
 
         items.push({

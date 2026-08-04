@@ -54,7 +54,7 @@ async function runSource(label, fn) {
 async function downloadBimaPdfs() {
     const OUT_DIR = path.join(PDFS_DIR, "bima");
     const API_BASE = "https://apibima.kemdiktisaintek.go.id/api/v1";
-    const PORTAL_ORIGIN = "https://bima.kemdiktisaintek.go.id";
+    const PORTAL_ORIGIN = "https://bima.kemdiktisaintek.go.id/pengumuman";
     const BUCKET_BASE = "https://storage.googleapis.com/sipp-be-files/";
     const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
 
@@ -298,16 +298,21 @@ async function downloadBrinPdfs() {
     const $ = cheerio.load(html);
     const items = [];
 
-    $("#daftar-pengumuman tbody tr.pengumuman-box").each((_, el) => {
-        if (items.length >= 20) return false;
+    // Site lists announcements oldest→newest; reverse so we download the latest.
+    const rows = $("#daftar-pengumuman tbody tr.pengumuman-box")
+        .toArray()
+        .reverse();
+
+    for (const el of rows) {
+        if (items.length >= 20) break;
         const $el = $(el);
         const $content = $el.find("td").eq(1);
         const title = $content.find(".pengumuman-judul").first().text().trim();
-        if (!title) return;
+        if (!title) continue;
         const pdfLink = $content.find(".pengumuman-dokumen li a").first().attr("href");
-        if (!pdfLink) return;
+        if (!pdfLink) continue;
         items.push({ title, pdfLink });
-    });
+    }
 
     console.log(`${items.length} items with PDFs found`);
 

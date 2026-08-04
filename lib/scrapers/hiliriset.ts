@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { NewsArticle } from "@/lib/constants";
+import { fetchWithRetry } from "./utils";
 
 const BASE = "https://hiliriset.kemdiktisaintek.go.id";
 const URL = `${BASE}/pengumuman?sort=published_at%7Cdesc`;
@@ -27,10 +28,15 @@ function sanitizeId(id: string | number): string {
 }
 
 export async function scrapeHiliriset(): Promise<NewsArticle[]> {
-    const res = await fetch(URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-        signal: AbortSignal.timeout(8000),
-    });
+    let res: Response;
+    try {
+        res = await fetchWithRetry(URL, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
+            signal: AbortSignal.timeout(20000),
+        });
+    } catch {
+        return [];
+    }
     if (!res.ok) return [];
 
     const html = await res.text();

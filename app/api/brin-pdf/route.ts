@@ -17,18 +17,22 @@ export async function GET(request: Request) {
         const $ = cheerio.load(html);
         const pdfLinks: string[] = [];
 
-        $("#daftar-pengumuman tbody tr.pengumuman-box").each((_, el) => {
-            const $el = $(el);
-            const $content = $el.find("td").eq(1);
-            const title = $content.find(".pengumuman-judul").first().text().trim();
-            if (!title) return;
+        // Same ordering as the scraper: site lists oldest→newest, so reverse.
+        $("#daftar-pengumuman tbody tr.pengumuman-box")
+            .toArray()
+            .reverse()
+            .forEach((el) => {
+                const $el = $(el);
+                const $content = $el.find("td").eq(1);
+                const title = $content.find(".pengumuman-judul").first().text().trim();
+                if (!title) return;
 
-            const link = $content
-                .find(".pengumuman-dokumen li a")
-                .first()
-                .attr("href");
-            if (link) pdfLinks.push(link);
-        });
+                const link = $content
+                    .find(".pengumuman-dokumen li a")
+                    .first()
+                    .attr("href");
+                if (link) pdfLinks.push(link);
+            });
 
         const pdfUrl = pdfLinks[idx];
         if (!pdfUrl) throw new Error("idx out of range");

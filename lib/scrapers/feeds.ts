@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import type { NewsArticle } from "@/lib/constants";
+import { fetchWithRetry } from "./utils";
 
 interface FeedOptions {
     category: string;
@@ -14,10 +15,15 @@ export async function parseRssFeed(
     url: string,
     opts: FeedOptions
 ): Promise<NewsArticle[]> {
-    const res = await fetch(url, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-        signal: AbortSignal.timeout(8000),
-    });
+    let res: Response;
+    try {
+        res = await fetchWithRetry(url, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
+            signal: AbortSignal.timeout(20000),
+        });
+    } catch {
+        return [];
+    }
     if (!res.ok) return [];
 
     const xml = await res.text();
