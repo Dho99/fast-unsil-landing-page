@@ -289,23 +289,39 @@ async function downloadBrinPdfs() {
 
     console.log("Fetching BRIN announcement list...");
     const brinAgent = new Agent({ connect: { rejectUnauthorized: false } });
-    let res;
-    try {
-        res = await undiciFetch(BRIN_URL, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-            },
-            signal: AbortSignal.timeout(20000),
-            dispatcher: brinAgent,
-        });
-    } catch (err) {
-        console.error(`[FAIL] BRIN fetch error: ${err.message} ${err.cause ? `cause: ${err.cause.message || err.cause}` : ""}`);
-        return { new: 0, skip: 0, fail: 0 };
+    // Retry with backoff + fallback (BRIN often slow/timeout from VPS)
+    const brinHeaders = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    };
+    let res = null;
+    let lastErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        for (const useBypass of [true, false]) {
+            try {
+                const agent = useBypass ? brinAgent : undefined;
+                res = await undiciFetch(BRIN_URL, {
+                    headers: brinHeaders,
+                    signal: AbortSignal.timeout(30000),
+                    ...(agent ? { dispatcher: agent } : {}),
+                });
+                if (res.ok) break;
+                lastErr = new Error(`HTTP ${res.status}`);
+            } catch (err) {
+                lastErr = err;
+                // try next variant
+            }
+        }
+        if (res && res.ok) break;
+        if (attempt < 3) {
+            const wait = attempt * 2000;
+            console.log(`  [RETRY] attempt ${attempt} failed: ${lastErr?.message} ${lastErr?.cause ? `cause: ${lastErr.cause.message || lastErr.cause}` : ""} — retry in ${wait}ms`);
+            await new Promise((r) => setTimeout(r, wait));
+        }
     }
-    if (!res.ok) {
-        console.error(`[FAIL] List fetch: HTTP ${res.status}`);
+    if (!res || !res.ok) {
+        console.error(`[FAIL] BRIN fetch error after 3 attempts: ${lastErr?.message} ${lastErr?.cause ? `cause: ${lastErr.cause.message || lastErr.cause}` : ""}`);
         return { new: 0, skip: 0, fail: 0 };
     }
 

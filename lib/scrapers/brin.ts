@@ -3,6 +3,7 @@ import path from "path";
 import * as cheerio from "cheerio";
 import type { NewsArticle } from "@/lib/constants";
 import { parseIndonesianDate, fetchWithRetry } from "./utils";
+import { Agent, fetch as undiciFetch } from "undici";
 
 const URL = "https://pendanaan-risnov.brin.go.id/pendanaan";
 const CATEGORY_COLOR = "#DC2626";
@@ -20,16 +21,28 @@ function timestampToIso(raw: string): string | null {
 }
 
 export async function scrapeBrin(): Promise<NewsArticle[]> {
-    let res: Response;
-    try {
-        res = await fetchWithRetry(URL, {
-            headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-            signal: AbortSignal.timeout(20000),
-        });
-    } catch {
-        return [];
+    let res: Response | null = null;
+    const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
+    // Try native fetchWithRetry then undici ssl-bypass (VPS timeout fix)
+    for (const useBypass of [false, true] as const) {
+        try {
+            res = useBypass
+                ? await (undiciFetch as unknown as typeof fetch)(URL, {
+                      headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
+                      signal: AbortSignal.timeout(30000),
+                      // @ts-expect-error undici dispatcher
+                      dispatcher: sslBypassAgent,
+                  })
+                : await fetchWithRetry(URL, {
+                      headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
+                      signal: AbortSignal.timeout(30000),
+                  });
+            if (res.ok) break;
+        } catch {
+            // try next variant
+        }
     }
-    if (!res.ok) return [];
+    if (!res || !res.ok) return [];
 
     const html = await res.text();
     const $ = cheerio.load(html);
