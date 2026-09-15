@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+// Polyfill for undici on Node 18 where global File is missing
+if (typeof File === "undefined") {
+    // @ts-ignore
+    globalThis.File = class File {};
+}
+
 import * as cheerio from "cheerio";
 import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { Agent, fetch as undiciFetch } from "undici";
@@ -45,7 +51,8 @@ async function runSource(label, fn) {
         const { new: n, skip: s, fail: f } = await fn();
         console.log(`\n  ${label} — New: ${n} | Skipped: ${s} | Failed: ${f}`);
     } catch (err) {
-        console.error(`  ${label} — FATAL: ${err.message}`);
+        console.error(`  ${label} — FATAL: ${err.message} ${err.stack ? `\n${err.stack}` : ""}`);
+        if (err.cause) console.error(`  cause: ${err.cause.message || err.cause}`);
     }
 }
 
@@ -281,14 +288,22 @@ async function downloadBrinPdfs() {
     mkdirSync(OUT_DIR, { recursive: true });
 
     console.log("Fetching BRIN announcement list...");
-    const res = await undiciFetch(BRIN_URL, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-        },
-        signal: AbortSignal.timeout(15000),
-    });
+    const brinAgent = new Agent({ connect: { rejectUnauthorized: false } });
+    let res;
+    try {
+        res = await undiciFetch(BRIN_URL, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+            },
+            signal: AbortSignal.timeout(20000),
+            dispatcher: brinAgent,
+        });
+    } catch (err) {
+        console.error(`[FAIL] BRIN fetch error: ${err.message} ${err.cause ? `cause: ${err.cause.message || err.cause}` : ""}`);
+        return { new: 0, skip: 0, fail: 0 };
+    }
     if (!res.ok) {
         console.error(`[FAIL] List fetch: HTTP ${res.status}`);
         return { new: 0, skip: 0, fail: 0 };
@@ -347,7 +362,7 @@ async function downloadBrinPdfs() {
 // ─── Revalidate Next.js cache ─────────────────────────────────────────────────
 
 async function triggerRevalidate() {
-    const base = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const base = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://fast.unsil.ac.id";
     const secret = process.env.REVALIDATE_SECRET || "";
     const url = `${base.replace(/\/$/, "")}/api/revalidate`;
     const headers = {};
