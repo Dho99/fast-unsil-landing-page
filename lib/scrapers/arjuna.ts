@@ -1,7 +1,11 @@
 import type { NewsArticle } from "@/lib/constants";
+import { fetchWithRetry } from "./utils";
+import { Agent, fetch as undiciFetch } from "undici";
 
-const API_URL =
-    "https://arjuna-api-zmltmhkk4a-et.a.run.app/api/frontpage/getPopularNews?row=10";
+const API_URLS = [
+    "https://apiarjuna.kemdiktisaintek.go.id/api/frontpage/getPopularNews?row=10",
+    "https://arjuna-api-zmltmhkk4a-et.a.run.app/api/frontpage/getPopularNews?row=10",
+];
 const PORTAL_URL = "https://arjuna.kemdiktisaintek.go.id/#/pengumuman";
 const CATEGORY_COLOR = "#8B5CF6";
 const GRADIENT =
@@ -42,15 +46,42 @@ function stripHtmlEntities(raw: string): string {
 }
 
 export async function scrapeArjuna(): Promise<NewsArticle[]> {
-    const res = await fetch(API_URL, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)",
-            Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(15000),
-    });
-    if (!res.ok) {
-        console.error("[arjuna] fetch failed:", res.status, res.statusText);
+    let res: Response | null = null;
+    let lastStatus = "";
+    const sslBypassAgent = new Agent({ connect: { rejectUnauthorized: false } });
+    for (const url of API_URLS) {
+        for (const useBypass of [false, true] as const) {
+            try {
+                const r = useBypass
+                    ? await (undiciFetch as unknown as typeof fetch)(url, {
+                          headers: {
+                              "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)",
+                              Accept: "application/json",
+                          },
+                          signal: AbortSignal.timeout(15000),
+                          // @ts-expect-error undici dispatcher
+                          dispatcher: sslBypassAgent,
+                      })
+                    : await fetchWithRetry(url, {
+                          headers: {
+                              "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)",
+                              Accept: "application/json",
+                          },
+                          signal: AbortSignal.timeout(15000),
+                      });
+                if (r.ok) {
+                    res = r as Response;
+                    break;
+                }
+                lastStatus = `${r.status} ${r.statusText} (${url}${useBypass ? " ssl-bypass" : ""})`;
+            } catch (e) {
+                lastStatus = `${e instanceof Error ? e.message : String(e)} (${url}${useBypass ? " ssl-bypass" : ""})`;
+            }
+        }
+        if (res) break;
+    }
+    if (!res || !res.ok) {
+        console.error("[arjuna] fetch failed:", lastStatus);
         return [];
     }
 

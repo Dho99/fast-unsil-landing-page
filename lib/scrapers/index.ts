@@ -56,7 +56,8 @@ async function fetchAllNewsRaw(): Promise<NewsArticle[]> {
 }
 
 export const fetchAllNews = unstable_cache(fetchAllNewsRaw, ["all-news"], {
-    revalidate: 3600,
+    revalidate: 300,
+    tags: ["all-news"],
 });
 
 async function fetchInfoDiktiRaw(): Promise<NewsArticle[]> {
@@ -79,5 +80,6 @@ async function fetchInfoDiktiRaw(): Promise<NewsArticle[]> {
 }
 
 export const fetchInfoDikti = unstable_cache(fetchInfoDiktiRaw, ["info-dikti"], {
-    revalidate: 3600,
+    revalidate: 300,
+    tags: ["info-dikti"],
 });

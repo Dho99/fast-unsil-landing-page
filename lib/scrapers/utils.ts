@@ -1,16 +1,16 @@
 const ID_MONTHS: Record<string, number> = {
-    januari: 0, jan: 0,
-    februari: 1, feb: 1,
-    maret: 2, mar: 2,
+    januari: 0, january: 0, jan: 0,
+    februari: 1, february: 1, feb: 1,
+    maret: 2, march: 2, mar: 2,
     april: 3, apr: 3,
-    mei: 4,
-    juni: 5, jun: 5,
-    juli: 6, jul: 6,
-    agustus: 7, agt: 7, agu: 7, aug: 7,
-    september: 8, sep: 8,
-    oktober: 9, okt: 9, oct: 9,
+    mei: 4, may: 4,
+    juni: 5, june: 5, jun: 5,
+    juli: 6, july: 6, jul: 6,
+    agustus: 7, august: 7, agt: 7, agu: 7, aug: 7,
+    september: 8, sep: 8, sept: 8,
+    oktober: 9, october: 9, okt: 9, oct: 9,
     november: 10, nov: 10,
-    desember: 11, des: 11, dec: 11,
+    desember: 11, december: 11, des: 11, dec: 11,
 };
 
 // Retry transient network failures (slow gov sites, flaky TLS).

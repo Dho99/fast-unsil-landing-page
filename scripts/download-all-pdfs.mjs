@@ -319,7 +319,7 @@ async function downloadBrinPdfs() {
     let newCount = 0, skipCount = 0, failCount = 0;
 
     for (const item of items) {
-        const fileId = sanitizeId(item.title).slice(0, 48);
+        const fileId = sanitizeId(item.title).slice(0, 64);
         const dest = path.join(OUT_DIR, fileId + ".pdf");
 
         if (existsSync(dest) && statSync(dest).size > 1000) {
@@ -344,6 +344,23 @@ async function downloadBrinPdfs() {
     return { new: newCount, skip: skipCount, fail: failCount };
 }
 
+// ─── Revalidate Next.js cache ─────────────────────────────────────────────────
+
+async function triggerRevalidate() {
+    const base = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const secret = process.env.REVALIDATE_SECRET || "";
+    const url = `${base.replace(/\/$/, "")}/api/revalidate`;
+    const headers = {};
+    if (secret) headers["x-revalidate-secret"] = secret;
+    try {
+        const res = await undiciFetch(url, { method: "POST", headers, signal: AbortSignal.timeout(10000) });
+        if (res.ok) console.log(`[revalidate] OK — ${url}`);
+        else console.log(`[revalidate] HTTP ${res.status} — ${url} (skip, page will refresh in 5 min)`);
+    } catch (err) {
+        console.log(`[revalidate] skip — ${err.message} (page will refresh in 5 min)`);
+    }
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -356,6 +373,7 @@ async function main() {
     await runSource("BRIN", downloadBrinPdfs);
 
     console.log(`\n═══ All done. ═══`);
+    await triggerRevalidate();
 }
 
 main().catch((err) => {

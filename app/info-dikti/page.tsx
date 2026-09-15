@@ -4,6 +4,8 @@ import NavbarWrapper from "@/components/NavbarWrapper";
 import InfoDiktiCard from "@/components/InfoDiktiCard";
 import type { Metadata } from "next";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
     title: "Info Dikti — FAST UNSIL",
     description: "Agregasi pengumuman dari portal-portal Dikti: Kemdiktisaintek, Hiliriset, BIMA, dan BRIN.",
@@ -46,7 +48,7 @@ export default async function InfoDiktiPage() {
                         Info Dikti
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Agregasi pengumuman dari portal Dikti — diperbarui setiap jam.
+                        Agregasi pengumuman dari portal Dikti — diperbarui setiap 5 menit.
                     </p>
                 </header>
 

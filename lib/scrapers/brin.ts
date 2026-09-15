@@ -67,11 +67,9 @@ export async function scrapeBrin(): Promise<NewsArticle[]> {
         const excerpt = refNum ? `No. ${refNum}` : "";
 
         const rawPdfLink = $content.find(".pengumuman-dokumen li a").first().attr("href");
-        const brinId = sanitizeId(title).slice(0, 48);
+        const brinId = sanitizeId(title).slice(0, 64);
         const localPdfPath = `/pdfs/brin/${brinId}.pdf`;
-        const localExists = fs.existsSync(
-            path.join(process.cwd(), "public", localPdfPath)
-        );
+        const localExists = fs.existsSync(path.join(process.cwd(), "public", localPdfPath));
 
         const hasPdf = !!rawPdfLink;
         const pdfLink = hasPdf
