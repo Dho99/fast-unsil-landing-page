@@ -94,7 +94,10 @@ export async function scrapeArjuna(): Promise<NewsArticle[]> {
 
     if (!body.status || !Array.isArray(body.data)) return [];
 
-    return body.data.slice(0, 10).map((item, i) => {
+    return body.data
+        .filter((item) => !/^\s*test\s+pengumuman\s*$/i.test((item.title || "").trim()))
+        .slice(0, 10)
+        .map((item, i) => {
         const pdfLink = item.lampiran1 || undefined;
         const link = pdfLink ?? PORTAL_URL;
         const cleanTitle = stripHtmlEntities(item.title);
