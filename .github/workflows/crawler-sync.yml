@@ -1,0 +1,85 @@
+name: crawler-sync
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 */6 * * *" # tiap 6 jam (00,06,12,18 UTC)
+
+concurrency:
+  group: crawler-sync
+  cancel-in-progress: false
+
+jobs:
+  crawl-and-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run crawler
+        run: |
+          set -e
+          npm run sync-pdfs
+
+      - name: Validate crawler output
+        run: |
+          set -e
+          echo "=== public/pdfs ==="
+          ls -R public/pdfs || (echo "public/pdfs missing" && exit 1)
+          count=$(find public/pdfs -type f -name "*.pdf" | wc -l)
+          echo "pdf count=$count"
+          if [ "$count" -eq 0 ]; then
+            echo "ERROR: no pdf generated — fail workflow"
+            exit 1
+          fi
+          echo "=== sizes ==="
+          du -sh public/pdfs/* || true
+          find public/pdfs -type f -name "*.pdf" -exec ls -lh {} \; | head -30
+
+      - name: Upload PDFs to VPS (additive, no delete)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: "public/pdfs/**"
+          target: "/var/www/WP/fast/"
+          strip_components: 1
+          overwrite: true
+          rm: false
+          debug: false
+
+      - name: Fix perms and revalidate
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            echo "=== VPS pdfs ==="
+            ls -R /var/www/WP/fast/public/pdfs | head -60
+            # additive: jangan hapus file lama di VPS
+            # fix perms agar Next.js bisa serve
+            sudo chown -R www-data:www-data /var/www/WP/fast/public/pdfs 2>/dev/null || chown -R $USER:$USER /var/www/WP/fast/public/pdfs
+            find /var/www/WP/fast/public/pdfs -type f -name "*.pdf" -exec chmod 644 {} \; || true
+            echo "=== revalidate ==="
+            if [ -n "${{ secrets.REVALIDATE_SECRET }}" ]; then
+              curl -s -X POST -H "x-revalidate-secret: ${{ secrets.REVALIDATE_SECRET }}" https://fast.unsil.ac.id/api/revalidate || echo "revalidate skip (non-fatal)"
+            else
+              curl -s -X POST https://fast.unsil.ac.id/api/revalidate || echo "revalidate skip (no secret, non-fatal)"
+            fi
+            echo "done"
