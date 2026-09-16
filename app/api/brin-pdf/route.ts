@@ -1,63 +1,96 @@
-import * as cheerio from "cheerio";
+import fs from "fs";
+import path from "path";
 
-const BRIN_URL = "https://pendanaan-risnov.brin.go.id/pendanaan";
-const BRIN_ORIGIN = "https://pendanaan-risnov.brin.go.id";
+/**
+ * Deprecated: Previously proxied https://pendanaan-risnov.brin.go.id/pendanaan via runtime fetch.
+ * VPS cannot reach BRIN (103.144.45.95:443 timeout), so crawler now runs in GitHub Actions
+ * and PDFs are synced to public/pdfs/brin/*.pdf.
+ *
+ * This route now serves local PDFs:
+ *   GET /api/brin-pdf?file=<filename.pdf>
+ * Legacy ?idx= is deprecated and returns 410.
+ *
+ * Path traversal is validated.
+ */
+
+const BRIN_DIR = path.join(process.cwd(), "public", "pdfs", "brin");
+
+function isSafeFilename(name: string): boolean {
+    if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return false;
+    if (!name.toLowerCase().endsWith(".pdf")) return false;
+    // allow only safe chars (sanitized titles)
+    if (!/^[a-zA-Z0-9._\-]+$/.test(name)) return false;
+    return true;
+}
 
 export async function GET(request: Request) {
-    const idx = Number(new URL(request.url).searchParams.get("idx") ?? "0");
+    const url = new URL(request.url);
+    const file = url.searchParams.get("file");
+    const idx = url.searchParams.get("idx");
+
+    // Legacy idx support deprecated — instruct to use ?file=
+    if (!file && idx !== null) {
+        return new Response(
+            JSON.stringify({
+                error: "Deprecated: use ?file=<filename.pdf> instead of ?idx=. See public/pdfs/brin/",
+                idx,
+            }),
+            { status: 410, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    if (!file) {
+        return new Response(JSON.stringify({ error: "Missing ?file=<filename.pdf>" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+
+    if (!isSafeFilename(file)) {
+        return new Response(JSON.stringify({ error: "Invalid filename" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+
+    const full = path.join(BRIN_DIR, file);
+    const resolved = path.resolve(full);
+    const base = path.resolve(BRIN_DIR);
+    if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+        return new Response(JSON.stringify({ error: "Path traversal blocked" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
 
     try {
-        const res = await fetch(BRIN_URL, {
-            headers: { "User-Agent": "Mozilla/5.0 (compatible; RSS-aggregator)" },
-            signal: AbortSignal.timeout(8000),
-        });
-        if (!res.ok) throw new Error("list failed");
-
-        const html = await res.text();
-        const $ = cheerio.load(html);
-        const pdfLinks: string[] = [];
-
-        // Same ordering as the scraper: site lists oldest→newest, so reverse.
-        $("#daftar-pengumuman tbody tr.pengumuman-box")
-            .toArray()
-            .reverse()
-            .forEach((el) => {
-                const $el = $(el);
-                const $content = $el.find("td").eq(1);
-                const title = $content.find(".pengumuman-judul").first().text().trim();
-                if (!title) return;
-
-                const link = $content
-                    .find(".pengumuman-dokumen li a")
-                    .first()
-                    .attr("href");
-                if (link) pdfLinks.push(link);
+        if (!fs.existsSync(resolved)) {
+            return new Response(JSON.stringify({ error: "File not found" }), {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
             });
-
-        const pdfUrl = pdfLinks[idx];
-        if (!pdfUrl) throw new Error("idx out of range");
-
-        const pdfRes = await fetch(pdfUrl, {
-            headers: {
-                "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-                Accept: "application/pdf,image/webp,*/*",
-                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-                Referer: BRIN_ORIGIN,
-            },
-            signal: AbortSignal.timeout(15000),
-        });
-        if (!pdfRes.ok) throw new Error(`S3: HTTP ${pdfRes.status}`);
-
-        return new Response(pdfRes.body, {
+        }
+        const stat = fs.statSync(resolved);
+        if (!stat.isFile() || stat.size < 100) {
+            return new Response(JSON.stringify({ error: "Invalid file" }), {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+        const stream = fs.createReadStream(resolved);
+        return new Response(stream as unknown as BodyInit, {
             headers: {
                 "Content-Type": "application/pdf",
-                "Content-Disposition": `inline; filename="brin-${idx}.pdf"`,
+                "Content-Disposition": `inline; filename="${file}"`,
                 "Cache-Control": "public, max-age=86400",
+                "Content-Length": String(stat.size),
             },
         });
     } catch (err) {
-        console.error("[brin-pdf proxy]", err);
-        return new Response("PDF unavailable", { status: 502 });
+        console.error("[brin-pdf local]", err);
+        return new Response(JSON.stringify({ error: "PDF unavailable" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+        });
     }
 }
