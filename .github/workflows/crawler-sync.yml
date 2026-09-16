@@ -47,39 +47,64 @@ jobs:
           du -sh public/pdfs/* || true
           find public/pdfs -type f -name "*.pdf" -exec ls -lh {} \; | head -30
 
-      - name: Upload PDFs to VPS (additive, no delete)
-        uses: appleboy/scp-action@v0.1.7
+      - name: Sync PDFs to VPS
+        uses: burnett01/rsync-deployments@7.0.2
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          source: "public/pdfs/**"
-          target: "/var/www/WP/fast/"
-          strip_components: 1
-          overwrite: true
-          rm: false
-          debug: false
+          switches: -avzr --delete
+          path: public/pdfs/
+          remote_path: /var/www/WP/fast/public/pdfs/
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_user: ${{ secrets.VPS_USER }}
+          remote_key: ${{ secrets.VPS_SSH_KEY }}
+          remote_port: ${{ secrets.VPS_PORT }}
 
-      - name: Fix perms and revalidate
+            - name: Fix perms and revalidate
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+
           script: |
             set -e
-            echo "=== VPS pdfs ==="
-            ls -R /var/www/WP/fast/public/pdfs | head -60
-            # additive: jangan hapus file lama di VPS
-            # fix perms agar Next.js bisa serve
-            sudo chown -R www-data:www-data /var/www/WP/fast/public/pdfs 2>/dev/null || chown -R $USER:$USER /var/www/WP/fast/public/pdfs
-            find /var/www/WP/fast/public/pdfs -type f -name "*.pdf" -exec chmod 644 {} \; || true
-            echo "=== revalidate ==="
+
+            echo "=== VPS PDF count ==="
+
+            find /var/www/WP/fast/public/pdfs \
+            -type f \
+            -name "*.pdf" | wc -l
+
+
+            echo "=== Fix permissions ==="
+
+            find /var/www/WP/fast/public/pdfs \
+            -type d \
+            -exec chmod 755 {} \;
+
+            find /var/www/WP/fast/public/pdfs \
+            -type f \
+            -name "*.pdf" \
+            -exec chmod 644 {} \;
+
+
+            echo "=== Revalidate ==="
+
             if [ -n "${{ secrets.REVALIDATE_SECRET }}" ]; then
-              curl -s -X POST -H "x-revalidate-secret: ${{ secrets.REVALIDATE_SECRET }}" https://fast.unsil.ac.id/api/revalidate || echo "revalidate skip (non-fatal)"
+
+              curl -fsS \
+              -X POST \
+              -H "x-revalidate-secret: ${{ secrets.REVALIDATE_SECRET }}" \
+              http://fast.if.unsil.ac.id/api/revalidate
+
             else
-              curl -s -X POST https://fast.unsil.ac.id/api/revalidate || echo "revalidate skip (no secret, non-fatal)"
+
+              curl -fsS \
+              -X POST \
+              http://fast.if.unsil.ac.id/api/revalidate || \
+              echo "revalidate skipped"
+
             fi
+
+
             echo "done"
