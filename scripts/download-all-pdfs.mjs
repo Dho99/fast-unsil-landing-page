@@ -104,7 +104,7 @@ async function downloadBimaPdfs() {
 
     function extractPath(gcsUrl) {
         if (!gcsUrl || !gcsUrl.startsWith(BUCKET_BASE)) return null;
-        return encodeURIComponent(gcsUrl.slice(BUCKET_BASE.length));
+        return gcsUrl.slice(BUCKET_BASE.length);
     }
 
     async function getSignedUrl(filePath) {

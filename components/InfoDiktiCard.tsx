@@ -32,10 +32,9 @@ function ItemRow({
     item: NewsArticle;
     variant: "berita" | "announcement";
 }) {
-    // Prefer the PDF link when the item is a document; otherwise the article page.
     const pdfUrl = item.pdfLink ?? (isPdfLink(item.link) ? item.link : undefined);
     const titleHref =
-        pdfUrl ?? (item.link && item.link !== "#" ? item.link : undefined);
+        item.link && item.link !== "#" ? item.link : pdfUrl;
 
     const meta =
         variant === "berita"
@@ -46,27 +45,73 @@ function ItemRow({
               ].join(" · ")
             : formatPublishedAt(item.date);
 
+    // Normalize attachments: prioritize explicit attachments array, or fall back to single pdfLink
+    const explicitAttachments = item.attachments ?? [];
+    const fallbackAttachments = pdfUrl
+        ? [
+              {
+                  name: item.title.toLowerCase().endsWith(".pdf")
+                      ? item.title
+                      : `${item.title}.pdf`,
+                  url: pdfUrl,
+              },
+          ]
+        : [];
+    const attachments =
+        explicitAttachments.length > 0 ? explicitAttachments : fallbackAttachments;
+
     return (
-        <li className="py-2 border-b border-border/40 last:border-0">
-            <div className="flex items-baseline gap-2">
-                <span className="flex-1 min-w-0 text-sm leading-snug">
-                    {titleHref ? (
-                        <a
-                            href={titleHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-foreground hover:text-primary transition-colors"
-                        >
-                            {item.title}
-                        </a>
-                    ) : (
-                        <span className="text-foreground">{item.title}</span>
-                    )}
-                </span>
-                {pdfUrl && <PdfBadge href={pdfUrl} />}
+        <li className="py-2.5 border-b border-border/40 last:border-0">
+            <div className="text-sm leading-snug">
+                {titleHref ? (
+                    <a
+                        href={titleHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground hover:text-primary transition-colors font-medium"
+                    >
+                        {item.title}
+                    </a>
+                ) : (
+                    <span className="text-foreground font-medium">{item.title}</span>
+                )}
             </div>
+
+            {item.excerpt && (
+                <div className="text-xs text-muted-foreground/80 mt-1">
+                    {item.excerpt}
+                </div>
+            )}
+
+            {attachments.length > 0 && (
+                <div className="mt-2 text-xs bg-muted/40 border border-border/50 rounded-md p-2 space-y-1.5">
+                    <div className="font-mono text-[11px] font-semibold text-muted-foreground">
+                        Unduh Dokumen{attachments.length > 1 ? ` (${attachments.length})` : ""}:
+                    </div>
+                    <ul className="space-y-1">
+                        {attachments.map((att, idx) => (
+                            <li
+                                key={idx}
+                                className="flex items-center justify-between gap-2 text-xs"
+                            >
+                                <a
+                                    href={att.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline truncate flex-1 font-mono text-[11px]"
+                                    title={att.name}
+                                >
+                                    📄 {att.name}
+                                </a>
+                                <PdfBadge href={att.url} />
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
             {meta && (
-                <div className="font-mono text-[10px] text-muted-foreground/40 mt-0.5">
+                <div className="font-mono text-[10px] text-muted-foreground/40 mt-1.5">
                     {meta}
                 </div>
             )}

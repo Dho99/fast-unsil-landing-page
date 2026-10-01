@@ -65,6 +65,8 @@ export interface NewsArticle {
     link?: string;
     source?: string;
     pdfLink?: string;
+    pdfLinks?: string[];
+    attachments?: { name: string; url: string }[];
     publishedAt?: string;
     createdAt?: string;
 }

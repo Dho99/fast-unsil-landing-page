@@ -1,6 +1,6 @@
 import type { NewsArticle, Publication } from "@/lib/constants";
 
-const SITE = "https://fast.unsil.ac.id";
+const SITE = process.env.BASE_URL ?? "https://fast.unsil.ac.id";
 
 export function escapeXml(str: string): string {
     return str
@@ -63,7 +63,8 @@ function publicationItemToXml(pub: Publication): string {
 }
 
 export function buildNewsRssXml(articles: NewsArticle[], selfUrl?: string): string {
-    const self = selfUrl ?? `${SITE}/rss`;
+    const rawSelf = selfUrl ?? `${SITE}/rss`;
+    const self = rawSelf.replace(/https?:\/\/localhost(:\d+)?/g, SITE);
     return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -79,7 +80,8 @@ ${articles.map(newsItemToXml).join("\n")}
 }
 
 export function buildPublicationsRssXml(publications: Publication[], selfUrl?: string): string {
-    const self = selfUrl ?? `${SITE}/rss/publications`;
+    const rawSelf = selfUrl ?? `${SITE}/rss/publications`;
+    const self = rawSelf.replace(/https?:\/\/localhost(:\d+)?/g, SITE);
     return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>

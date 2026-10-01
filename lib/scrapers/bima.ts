@@ -37,6 +37,7 @@ const BIMA_HEADERS = {
 };
 
 interface BimaFile {
+    id?: string;
     url: string;
     nama?: string;
 }
@@ -98,12 +99,21 @@ export async function scrapeBima(): Promise<NewsArticle[]> {
     if (body.code !== 200 || !Array.isArray(body.data)) return [];
 
     return body.data.slice(0, 10).map((item, i) => {
-        const rawPdfLink = item.files?.[0]?.url;
-        const bimaId = sanitizeId(item.id);
-        const localPdfPath = `/pdfs/bima/${bimaId}.pdf`;
-        const localExists = fs.existsSync(
-            path.join(process.cwd(), "public", localPdfPath)
-        );
+        const files = item.files ?? [];
+        const attachments = files.map((f, fi) => {
+            const fid = sanitizeId(f.id ?? `${item.id}-${fi}`);
+            const localPdfPath = `/pdfs/bima/${fid}.pdf`;
+            const localExists = fs.existsSync(
+                path.join(process.cwd(), "public", localPdfPath)
+            );
+            return {
+                name: f.nama ?? `Dokumen ${fi + 1}.pdf`,
+                url: localExists
+                    ? localPdfPath
+                    : `/api/bima-pdf?idx=${i}&file=${fi}`,
+            };
+        });
+        const pdfLinks = attachments.map((a) => a.url);
 
         const itemDate = item.tgl_pemberitaan
             ? new Date(item.tgl_pemberitaan).toISOString()
@@ -119,10 +129,9 @@ export async function scrapeBima(): Promise<NewsArticle[]> {
             publishedAt: itemDate,
             excerpt: item.no_surat ? `No. ${item.no_surat}` : (item.ringkasan ?? ""),
             link: PORTAL_URL,
-            // prefer local static file; fall back to live proxy if not yet downloaded
-            pdfLink: rawPdfLink
-                ? localExists ? localPdfPath : `/api/bima-pdf?idx=${i}`
-                : undefined,
+            pdfLink: pdfLinks[0],
+            pdfLinks: pdfLinks.length > 0 ? pdfLinks : undefined,
+            attachments: attachments.length > 0 ? attachments : undefined,
             source: "BIMA",
             createdAt: new Date().toISOString(),
         };

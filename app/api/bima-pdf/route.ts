@@ -58,11 +58,13 @@ function apiRequest(url: string, extra?: RequestInit): Promise<Response> {
 
 function extractPath(gcsUrl: string): string | null {
     if (!gcsUrl || !gcsUrl.startsWith(BUCKET_BASE)) return null;
-    return encodeURIComponent(gcsUrl.slice(BUCKET_BASE.length));
+    return gcsUrl.slice(BUCKET_BASE.length);
 }
 
 export async function GET(request: Request) {
-    const idx = Number(new URL(request.url).searchParams.get("idx") ?? "0");
+    const searchParams = new URL(request.url).searchParams;
+    const idx = Number(searchParams.get("idx") ?? "0");
+    const fileIdx = Number(searchParams.get("file") ?? "0");
 
     try {
         cookieJar = null;
@@ -89,9 +91,10 @@ export async function GET(request: Request) {
             code?: number;
             data?: { files?: { url: string }[] };
         } = await detailRes.json();
-        if (detailBody.code !== 200 || !detailBody.data?.files?.[0]?.url)
+        const targetFile = detailBody.data?.files?.[fileIdx];
+        if (detailBody.code !== 200 || !targetFile?.url)
             throw new Error("no files");
-        const filePath = extractPath(detailBody.data.files[0].url);
+        const filePath = extractPath(targetFile.url);
         if (!filePath) throw new Error("bad path");
 
         // 3. generate signed URL (public endpoint, no JWT needed)
